@@ -18,8 +18,8 @@ pypdf2==3.0.1
 sentence-transformers==2.2.2
 sentencepiece==0.1.99
 tiktoken==0.3.3
-tokenizers==0.15.1
-transformers==4.36.2
+tokenizers==0.13.3
+transformers==4.33.1
 faiss-cpu==1.7.4
 mpi4py==3.1.5
 psutil==5.9.7
@@ -31,3 +31,12 @@ sentencepiece~=0.1.99
 youtube-transcript-api==0.6.2
 pytube==15.0.0
 docx2txt==0.8
+
+# %localappdata%\NVIDIA\MiniConda\Scripts\conda.exe env list
+# %localappdata%\NVIDIA\MiniConda\Scripts\activate.bat %localappdata%\NVIDIA\ChatWithRTX\env_nvd_rag
+# cd %localappdata%\NVIDIA\ChatWithRTX\RAG\trt-llm-rag-windows-main 
+# pip install -r requirements.txt 
+
+jsonlines
+streamlit 
+paramiko

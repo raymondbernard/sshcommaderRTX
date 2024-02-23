@@ -6,6 +6,10 @@ import json
 import time
 import select 
 import socket
+import jsonlines
+
+
+
 # from dotenv import load_dotenv
 # from openai import OpenAI
 
@@ -22,6 +26,35 @@ DEFAULT_SYSTEM_MESSAGE  = "Note we are using Nvidia's cumulus Linux distribution
 ## command out below if ou use call_openai 
 URL = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/df2bee43-fb69-42b9-9ee5-f4eabbeaf3a8" ## user for only Nvidia 
 DEFAULT_AI = "call_nvidi" 
+
+
+def query_chat_logs(file_path, query):
+    """
+    Query the chat logs JSONL file.
+    
+    Args:
+    - file_path (str): Path to the JSONL file.
+    - query (str): Query string to search for in the chat logs.
+    
+    Returns:
+    - list of dict: List of chat log entries matching the query.
+    """
+    results = []
+    with jsonlines.open(file_path) as reader:
+        for line in reader:
+            if query in line['query'] or query in line['response']:
+                results.append(line)
+    return results
+
+# Example usage:
+file_path = 'chat_logs.jsonl'
+query = 'NVIDIA'
+results = query_chat_logs(file_path, query)
+for result in results:
+    print(result)
+
+
+
 
 def load_ai_config():
     try:
