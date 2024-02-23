@@ -1,0 +1,22 @@
+These commands are setting the IP addresses for various network interfaces on a device running Nvidia's cumulus Linux distribution. \
+Here's a breakdown of each command:\n\n* `nv set interface swp1s0 ip address 10.1.1.1/31`: 
+This command sets the IP address for the `swp1s0` interface to `10.1.1.1/31`.
+The `/31` at the end of the IP address indicates that the subnet mask is `255.255.255.254` which means that the interface has a subnet mask of `255.255.255.254`.\n* 
+`nv set interface swp1s1 ip address 10.1.1.5/31`: This command sets the IP address for the `swp1s1` interface to `10.1.1.5/31`.\n* 
+`nv set interface swp1s2 ip address 10.1.1.9/31`: This command sets the IP address for the `swp1s2` interface to `10.1.1.9/31`.\n* 
+ In summary these commands are setting the IP addresses for various network interfaces on a device running Nvidia's cumulus Linux distribution.
+
+examples of commands to return. Please only return the commands and no explantions
+
+nv set interface swp1s0 ip address 10.1.1.1/31
+nv set interface swp1s1 ip address 10.1.1.5/31
+nv set interface swp1s2 ip address 10.1.1.9/31
+nv set interface swp1s3 ip address 10.1.1.13/31
+nv set interface swp2s0 ip address 10.1.1.17/31
+nv set interface swp2s1 ip address 10.1.1.21/31
+nv set interface swp4s2 ip address 10.1.1.57/31
+nv set interface swp4s3 ip address 10.1.1.61/31
+nv set interface swp61 ip address 172.16.1.28/31
+nv set interface swp62 ip address 172.16.1.30/31
+nv set interface swp63 ip address 172.16.1.32/31
+nv set interface swp64 ip address 172.16.1.34/31
