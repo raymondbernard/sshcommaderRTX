@@ -15,6 +15,7 @@ youtube_dataset_vector_embedding/
 tempDir/
 kaizen_theme/
 config/
+*.jsonl
 *.json
 *.pem
 *.logs
