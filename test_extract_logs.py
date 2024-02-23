@@ -1,27 +1,33 @@
 import json
+import re
 
-# Function to reformat the response field based on certain criteria
-def reformat_response(data):
-    # Check if the response contains commands and reformat if necessary
-    # This is just an example based on your provided output. You might need to adjust the logic.
-    if "nv set interface" in data['response']:
-        # Split the response into lines, strip each line, and join back with newline characters
-        commands = data['response'].split('\n')
-        commands = [cmd.strip() for cmd in commands if cmd.strip()]  # Remove empty lines and strip
-        data['response'] = '\n'.join(commands)
-    elif "important about" in data['query']:  # Example condition to modify or clear the response
-        data['response'] = ""  # Clear the response or modify as needed
+def process_response(response):
+    # First, try to extract content within triple backticks
+    pattern = r'```(.*?)```'
+    matches = re.findall(pattern, response, re.DOTALL)
+    if matches:
+        # If found, join all matches. Assumes you want all extracted commands concatenated.
+        return '\n'.join(matches).strip()
+    else:
+        # If not found, handle the edge case with newline characters
+        # Keep everything up to and including the first newline
+        split_response = response.split('\n', 1)
+        if len(split_response) > 1:
+            # Return up to and including the first newline
+            return split_response[0] + '\n'
+        else:
+            # If there's no newline, return the entire response
+            return response
 
-    return data
+# File paths
+input_file_path = 'chat_logs.jsonl'
+output_file_path = 'commands_logs.jsonl'
 
-# Path to the original and new JSONL files
-input_path = 'chat_logs.jsonl'
-output_path = 'modified_logs.jsonl'
-
-# Open the original JSONL file for reading and the new JSONL file for writing
-with open(input_path, 'r') as input_file, open(output_path, 'w') as output_file:
-    # Process each line in the original JSONL file
+# Processing each line in the file
+with open(input_file_path, 'r') as input_file, open(output_file_path, 'w') as output_file:
     for line in input_file:
-        data = json.loads(line)  # Load JSON data from the line
-        modified_data = reformat_response(data)  # Reformat the response field
-        output_file.write(json.dumps(modified_data) + '\n')  # Write the modified data to the new JSONL file
+        data = json.loads(line)
+        # Process the response to extract the desired content
+        data['response'] = process_response(data['response'])
+        # Writing the modified data to the new file
+        output_file.write(json.dumps(data) + '\n')
