@@ -27,6 +27,10 @@ preference_config_file = 'config\\preferences.json'
 data_source = 'directory'
 
 def log_response(query, response, session_id):
+    print(response)
+
+
+    
     log_entry = {
         "session_id": session_id,
         "query": query,
