@@ -251,14 +251,14 @@ def server_input_form(servers, editing_index, key, title, save_function):
             "config_description": "",  # Initialize as empty
             "commands": [cmd.strip() for cmd in commands.split('\n') if cmd.strip()]
         }
-        config = load_ai_config()
-        AI = config['AI']
+        # config = load_ai_config()
+        # AI = config['AI']
         # Check for AI response
     
-        ai_response = call_ai(AI, commands)
-        print("AI Response:", ai_response)  # Replace with logging if appropriate
-        server_info["config_description"] = ai_response
-        st.text_area("AI's Configuration Description", value=ai_response, key="updated_description")
+        # ai_response = call_ai(AI, commands)
+        # print("AI Response:", ai_response)  # Replace with logging if appropriate
+        # server_info["config_description"] = ai_response
+        # st.text_area("AI's Configuration Description", value=ai_response, key="updated_description")
 
         # Save or update the server information
         if editing_index is not None:
