@@ -29,8 +29,6 @@ data_source = 'directory'
 def log_response(query, response, session_id):
     print(response)
 
-
-    
     log_entry = {
         "session_id": session_id,
         "query": query,
@@ -149,8 +147,6 @@ from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api.formatters import TextFormatter
 
 formatter = TextFormatter()
-
-
 
 def identify_url_type(url: str) -> str:
     """

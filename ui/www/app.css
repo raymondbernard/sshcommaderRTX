@@ -121,7 +121,7 @@ footer {
 }
 
 .sample-question-button {
-    border: var(--button-border-width) solid rgb(94, 94, 94) !important;
+    border: var(--button-border-width) solid hsl(0, 0%, 37%) !important;
     font-size: var(--text-md) !important;
     font-weight: 400 !important;
     height: 42px !important;

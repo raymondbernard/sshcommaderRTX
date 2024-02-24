@@ -6,70 +6,40 @@ import json
 import time
 import select 
 import socket
-import jsonlines
 
-
-
-# from dotenv import load_dotenv
-# from openai import OpenAI
 
 # Constants
 CONFIG_FILE = "config.json"
 TEST_FILE = "test.json"
 CONFIG_AI_FILE = "config_ai.json"
-# Modify the system message to customize the AI's configuration responses
-DEFAULT_SYSTEM_MESSAGE  = "Note we are using Nvidia's cumulus Linux distribution, just describe the commands you see.   Please keep your responses short and precise."
-# modify the url to your project
-## Switch between nvidia or openai 
 
 # AI  = "call_openai"
 ## command out below if ou use call_openai 
 URL = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/df2bee43-fb69-42b9-9ee5-f4eabbeaf3a8" ## user for only Nvidia 
 DEFAULT_AI = "call_nvidi" 
 
+col1, col2 = st.columns([1, 15])  # The numbers define the relative width of each column
 
-def query_chat_logs(file_path, query):
-    """
-    Query the chat logs JSONL file.
-    
-    Args:
-    - file_path (str): Path to the JSONL file.
-    - query (str): Query string to search for in the chat logs.
-    
-    Returns:
-    - list of dict: List of chat log entries matching the query.
-    """
-    results = []
-    with jsonlines.open(file_path) as reader:
-        for line in reader:
-            if query in line['query'] or query in line['response']:
-                results.append(line)
-    return results
-
-# Example usage:
-file_path = 'chat_logs.jsonl'
-query = 'NVIDIA'
-results = query_chat_logs(file_path, query)
-for result in results:
-    print(result)
-
-
-
-
-def load_ai_config():
-    try:
-        with open('config_ai.json', 'r') as file:
-            config = json.load(file)
-            config['AI'] = config.get('AI', DEFAULT_AI)
-            config['SYSTEM_MESSAGE'] = config.get('SYSTEM_MESSAGE', DEFAULT_SYSTEM_MESSAGE)
-            if config['AI'] == "call_nvidi":
-                config['URL'] = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/df2bee43-fb69-42b9-9ee5-f4eabbeaf3a8"
-            return config
-        
-    except Exception as e:
-        print(f"Error loading config: {e}")
-        # Return default configuration if any error occurs
-        return {"AI": DEFAULT_AI, "SYSTEM_MESSAGE": DEFAULT_SYSTEM_MESSAGE}
+# Display the logo in the first column
+with col1:
+    st.image(".\\ui\\assets\\nvidia_logo.png", width=42)  # Adjust path and width as needed
+with col2:
+    # Use HTML to customize the font size and any other styles
+    st.markdown("""
+    <style>
+    .font {
+        font-size:30px;  # You can adjust the font size here
+    }
+    </style>
+    <div class="font">
+        SSH Commander with RTX<br>
+    </div>
+    """, unsafe_allow_html=True)
+# Display text in the second column
+# with col2:
+#     st.markdown("SSH Commander with RTX")
+#     st.write("This tool helps to configure & test your servers/network devices via SSH using AI.")
+# Your app's content follows
 
 def save_ai_config(config):
     with open(CONFIG_AI_FILE, 'w') as file:
@@ -77,23 +47,18 @@ def save_ai_config(config):
 
 # Streamlit sidebar interface for changing AI configuration
 
-
 def config_ai_interface():
-    st.sidebar.title("AI Configuration")
-    config = load_ai_config()
-    system_message = st.sidebar.text_area("System Message", value=config.get('SYSTEM_MESSAGE', DEFAULT_SYSTEM_MESSAGE))
+    st.sidebar.title("Save Configs")
+    # config = load_ai_config()
+    # system_message = st.sidebar.text_area("System Message", value=config.get('SYSTEM_MESSAGE', DEFAULT_SYSTEM_MESSAGE))
     if st.sidebar.button("Save Configuration"):
         new_config = {
             "AI": "na",
-            "SYSTEM_MESSAGE": system_message
+            # "SYSTEM_MESSAGE": system_message
         }
         save_ai_config(new_config)
         st.sidebar.success("AI Configuration saved!")
 
-#App Title and Description
-def display_app_header():
-    st.title("SSH Commander with AI with Nvidia\Tensorrt_LLM (Local)")
-    st.write("This tool helps to configure & test your servers/network devices via SSH.")
 
 # Initialize session state variables
 def init_session_variables():
@@ -115,45 +80,6 @@ def init_session_variables():
         st.session_state.tests = []
     if 'editing_test_index' not in st.session_state:
         st.session_state.editing_test_index = None
-
-
-# call Nivida api to retrieve AI from LLaMa2 code 32b 
-def call_nvidia(prompt):
-    config = load_ai_config()
-    message = config['SYSTEM_MESSAGE'] + prompt 
-    print(message)
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.connect(('localhost', 12345))
-        print(f"Sending: {message}")
-        sock.send(message.encode('utf-8'))
-     
-        # In client.py, after receiving the response
-        response_data = sock.recv(4096).decode('utf-8')  # Decode response to string
-        print("Getting a response from server = ", response_data)
-        response = json.loads(response_data)  # Parse JSON string back into a dictionary
-
-        complete_message = response
-        # for line in response.iter_lines():
-        #     if line:
-        #         decoded_line = line.decode('utf-8').strip()
-
-        #         # Check if the line is the end of data marker
-        #         if decoded_line == '[DONE]':
-        #             print("End of data stream.")
-        #             break
-
-        #         # Remove the "data: " prefix if present
-        #         if decoded_line.startswith('data: '):
-        #             decoded_line = decoded_line[6:]
-        #         try:
-        #             json_line = json.loads(decoded_line)
-        #             for choice in json_line['choices']:
-        #                 complete_message += choice['delta']['content']
-        #         except json.JSONDecodeError:
-        #             break 
-
-    print(complete_message)
-    return complete_message
 
 
 def ssh_conn_form():
@@ -478,10 +404,9 @@ def markdown_file():
 
 # Main Application Logic
 def main():
-    display_app_header()
     init_session_variables()
     load_config()
-    load_ai_config()
+    # load_ai_config()
     config_ai_interface()
     load_tests()
     ssh_conn_form()

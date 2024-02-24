@@ -42,7 +42,8 @@ if not "%env_path_found%"=="" (
     echo Environment path found: %env_path_found%
     call "%localappdata%\NVIDIA\MiniConda\Scripts\activate.bat" %env_path_found%
     python verify_install.py
-    python app_sshtensortt.py
+    start python app_sshtensortt.py
+    start streamlit run app_sshcommander.py
     pause
 ) else (
     echo Environment with 'env_nvd_rag' not found.
