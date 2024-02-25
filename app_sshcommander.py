@@ -17,6 +17,7 @@ CONFIG_AI_FILE = "config_ai.json"
 ## command out below if ou use call_openai 
 URL = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/df2bee43-fb69-42b9-9ee5-f4eabbeaf3a8" ## user for only Nvidia 
 DEFAULT_AI = "call_nvidi" 
+DEFAULT_SYSTEM_MESSAGE  = "Note we are using Nvidia's cumulus Linux distribution, just describe the commands you see.   Please keep your responses short and precise."
 
 col1, col2 = st.columns([1, 15])  # The numbers define the relative width of each column
 
@@ -35,11 +36,7 @@ with col2:
         SSH Commander with RTX<br>
     </div>
     """, unsafe_allow_html=True)
-# Display text in the second column
-# with col2:
-#     st.markdown("SSH Commander with RTX")
-#     st.write("This tool helps to configure & test your servers/network devices via SSH using AI.")
-# Your app's content follows
+
 
 def save_ai_config(config):
     with open(CONFIG_AI_FILE, 'w') as file:
@@ -47,10 +44,53 @@ def save_ai_config(config):
 
 # Streamlit sidebar interface for changing AI configuration
 
+def load_ai_config():
+    try:
+        with open('config_ai.json', 'r') as file:
+            config = json.load(file)
+            config['AI'] = config.get('AI', DEFAULT_AI)
+            config['SYSTEM_MESSAGE'] = config.get('SYSTEM_MESSAGE', DEFAULT_SYSTEM_MESSAGE)
+            if config['AI'] == "call_nvidi":
+                config['URL'] = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/df2bee43-fb69-42b9-9ee5-f4eabbeaf3a8"
+            return config
+    except Exception as e:
+        print(f"Error loading config: {e}")
+        # Return default configuration if any error occurs
+        return {"AI": DEFAULT_AI, "SYSTEM_MESSAGE": DEFAULT_SYSTEM_MESSAGE}
+
+
+def save_ai_config(config):
+    with open(CONFIG_AI_FILE, 'w') as file:
+        json.dump(config, file)
+
+
+def config_ai_interface():
+    st.sidebar.title("AI Configuration")
+    config = load_ai_config()
+
+    if config is not None and 'AI' in config:
+        ai_choice = st.sidebar.selectbox(
+            "Choose AI Service", 
+            ["call_nvidi", "call_openai"], 
+            index=["call_nvidi", "call_openai"].index(config['AI'])
+        )
+    else:
+        st.sidebar.error("Configuration not found or is invalid.")
+        return  # Exit the function
+
+    system_message = st.sidebar.text_area("System Message", value=config.get('SYSTEM_MESSAGE', DEFAULT_SYSTEM_MESSAGE))
+    if st.sidebar.button("Save Configuration"):
+        new_config = {
+            "AI": ai_choice,
+            "SYSTEM_MESSAGE": system_message
+        }
+        save_ai_config(new_config)
+        st.sidebar.success("AI Configuration saved!")
+
 def config_ai_interface():
     st.sidebar.title("Save Configs")
-    # config = load_ai_config()
-    # system_message = st.sidebar.text_area("System Message", value=config.get('SYSTEM_MESSAGE', DEFAULT_SYSTEM_MESSAGE))
+    config = load_ai_config()
+    system_message = st.sidebar.text_area("System Message", value=config.get('SYSTEM_MESSAGE', DEFAULT_SYSTEM_MESSAGE))
     if st.sidebar.button("Save Configuration"):
         new_config = {
             "AI": "na",
@@ -251,6 +291,7 @@ def server_input_form(servers, editing_index, key, title, save_function):
             "config_description": "",  # Initialize as empty
             "commands": [cmd.strip() for cmd in commands.split('\n') if cmd.strip()]
         }
+
         # config = load_ai_config()
         # AI = config['AI']
         # Check for AI response
@@ -406,7 +447,7 @@ def markdown_file():
 def main():
     init_session_variables()
     load_config()
-    # load_ai_config()
+    load_ai_config()
     config_ai_interface()
     load_tests()
     ssh_conn_form()
