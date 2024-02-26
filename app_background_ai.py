@@ -3,6 +3,7 @@ import time
 import json
 import logging
 # import gc
+import json 
 import torch
 # import ast
 # import threading
@@ -115,11 +116,43 @@ llm = TrtLlmAPI(
 )
 
 
-user_prompt = "Who is BB King?"
-completion_response = llm.complete(user_prompt)
-print({"text": completion_response.text, "status": 1} ) # Assuming success status is 1
+# user_prompt = "Who is BB King?"
+# completion_response = llm.complete(user_prompt)
+# print({"text": completion_response.text, "status": 1} ) # Assuming success status is 1
 
-log_completion_response(completion_response)
+# log_completion_response(completion_response)
+
+
+def update_config_descriptions(config_file_path):
+    # Load the JSON data from the file
+    with open(config_file_path, 'r') as file:
+        config_data = json.load(file)
+
+    # Iterate over each server in the config
+    for server in config_data["servers"]:
+        # Check if config_description needs to be updated
+        if  server["config_description"] == "":
+            user_prompt = "Generate a description for the following commands: " + ', '.join(server["commands"])
+            completion_response = llm.complete(user_prompt)
+            # Adjust access method here based on the actual structure of CompletionResponse
+            # if hasattr(completion_response, 'status') and completion_response.status == 1:
+            server["config_description"] = completion_response.text
+
+    # Write the updated configuration back to the config.json file
+    with open(config_file_path, 'w') as file:
+        json.dump(config_data, file, indent=4, ensure_ascii=False)
+# Example usage
+config_file_path = 'config.json'
+update_config_descriptions(config_file_path)
+
+
+
+
+
+
+
+
+
 
 # def chat_response(user_prompt):
 #     print("line 657 user prompt ", user_prompt)
