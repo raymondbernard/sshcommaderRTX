@@ -110,10 +110,8 @@ For a visual demonstration of how SSH Commander works, you can watch our demo vi
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-
 By Raymond Bernard
 ray.bernard@outlook.com
-
 
 ### Hardware requirement
 - Chat with RTX is currently built for RTX 3xxx and RTX 4xxx series GPUs that have at least 8GB of GPU memory.
@@ -122,3 +120,5 @@ ray.bernard@outlook.com
 - Latest NVIDIA GPU drivers
 
 
+GenAIonRTX, #DevContest, and #GTC24
+@NVIDIAAIDev, @NVIDIAAI, @NVIDIAAI

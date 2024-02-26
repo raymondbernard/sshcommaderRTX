@@ -45,6 +45,8 @@ if not "%env_path_found%"=="" (
     start python verify_install.py
     start python app_sshtensortt.py
     start streamlit run app_sshcommander.py
+    
+
     pause
 ) else (
     echo Environment with 'env_nvd_rag' not found.
