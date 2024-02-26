@@ -44,7 +44,7 @@ if not "%env_path_found%"=="" (
     cd C:\Users\RayBe\AppData\Local\NVIDIA\ChatWithRTX\RAG\trt-llm-rag-windows-main
     start python verify_install.py
     start python app_sshtensortt.py
-    streamlit run app_sshcommander.py
+    start streamlit run app_sshcommander.py
     pause
 ) else (
     echo Environment with 'env_nvd_rag' not found.

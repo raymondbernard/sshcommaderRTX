@@ -6,7 +6,7 @@ import json
 import time
 import select 
 import socket
-
+from app_process_data import main 
 
 # Constants
 CONFIG_FILE = "config.json"
@@ -19,6 +19,7 @@ DEFAULT_AI = "call_nvidi"
 DEFAULT_SYSTEM_MESSAGE  = "Note we are using Nvidia's cumulus Linux distribution, just describe the commands you see.   Please keep your responses short and precise."
 
 col1, col2 = st.columns([1, 15])  # The numbers define the relative width of each column
+main()
 
 # Display the logo in the first column
 with col1:
@@ -334,7 +335,21 @@ def buttons():
                 if 'original_ssh_client' in locals() and original_ssh_client is not None:
                     original_ssh_client.close()
 
-# Display added servers
+
+def delete_chat_log_entry_by_timestamp(target_timestamp):
+    updated_entries = []
+    target_timestamp = float(target_timestamp)  # Convert target timestamp to float for comparison
+    with open('chat_logs.jsonl', 'r') as file:
+        for line in file:
+            try:
+                entry = json.loads(line)
+                if entry.get('timestamp', 0.0) != target_timestamp:
+                    updated_entries.append(line)
+            except json.JSONDecodeError:
+                continue  # Skip lines that can't be decoded
+    with open('chat_logs.jsonl', 'w') as file:
+        file.writelines(updated_entries)
+
 def display_servers(servers, editing_index_key, section, delete_function, rerun_function):
     for i, server in enumerate(servers):
         st.write(f"Server {i+1}: {server['address']}")
@@ -352,11 +367,18 @@ def display_servers(servers, editing_index_key, section, delete_function, rerun_
             rerun_function()
 
         if delete_button:
+            #'timestamp' is the key in your server dictionary that holds the timestamp
+            if 'timestamp' in server:
+                delete_chat_log_entry_by_timestamp(server['timestamp'])
+                st.success("Chat log entry deleted successfully.")
+            else:
+                st.error("No timestamp found for this server entry.")
+            
             del servers[i]
             delete_function()
             rerun_function()
         st.write("---")
-
+ 
 # call nvidia or openai api 
 def call_ai(ai_type, commands):
     with st.spinner('Waiting for AI response...'):
