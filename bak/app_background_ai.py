@@ -15,8 +15,25 @@ from ui.user_interface import MainInterface
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 
-MODEL_CONFIG_FILE = 'config\\config.json'
-PREFERANCE_CONFIG_FILE = 'config\\preferences.json'
+MODEL_CONFIG_FILE = '.\\config\\config.json'
+PREFERANCE_CONFIG_FILE = '.\\config\\preferences.json'
+SYSTEM_MESSAGE_FILE = 'config_ai.json'
+CONFIG_JSON_FILE = 'config.json'
+
+def read_system_message(SYSTEM_MESSAGE_FILE):
+    try:
+        with open(SYSTEM_MESSAGE_FILE, 'r') as file:
+            data = json.load(file)
+            system_message = data.get("SYSTEM_MESSAGE", "Key not found.")
+            print(system_message)
+    except FileNotFoundError:
+        print("JSON file not found.")
+    except json.JSONDecodeError:
+        print("Error decoding JSON.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    return system_message
+
 
 def run_once(func):
     """Function decorator that ensures the function runs only once."""
@@ -128,7 +145,6 @@ def create_server_config(commands=[]):
         "commands": commands
     }
 
-
 ## Interm step setting up commands_logs.jsonl 
 def process_logs(file_path):
     # Initialize the config structure with an empty servers list
@@ -175,7 +191,7 @@ def process_logs(file_path):
 
 # Update the file config.json file to SSH_sshcommander.py 
 # Call LLM to fill in config_scrtiption to the config.json which ssh_commader.py presents user
-def update_config_descriptions(config_file_path, llm):
+def update_config_descriptions(config_file_path, system_message, llm):
     # Load the JSON data from the file
     with open(config_file_path, 'r') as file:
         config_data = json.load(file)
@@ -184,7 +200,9 @@ def update_config_descriptions(config_file_path, llm):
     for server in config_data["servers"]:
         # Check if config_description needs to be updated
         if  server["config_description"] == "":
-            user_prompt = "Generate a description for the following commands: " + ', '.join(server["commands"])
+            # user_prompt = system_message + ', '.join(server["commands"])
+            user_prompt = system_message + ', ' + 'mkdir ray'.join(server["commands"])
+
             completion_response = llm.complete(user_prompt)
             # Adjust access method here based on the actual structure of CompletionResponse
             # if hasattr(completion_response, 'status') and completion_response.status == 1:
@@ -194,6 +212,7 @@ def update_config_descriptions(config_file_path, llm):
     with open(config_file_path, 'w') as file:
         json.dump(config_data, file, indent=4, ensure_ascii=False)
 
+
 # Main Application Logic
 def main():
  
@@ -201,10 +220,8 @@ def main():
     llm = initialize_llm()  # This initializes the LLM and returns the instance.
     # another_llm_instance = initialize_llm()  # This will return the same instance as before without re-initializing.
     process_chat_log()
-
-    config_file_path = 'config.json'
-    update_config_descriptions(config_file_path, llm)
-
+    system_message = read_system_message(SYSTEM_MESSAGE_FILE)
+    update_config_descriptions(CONFIG_JSON_FILE, system_message, llm)
 
 if __name__=="__main__":
     main()
