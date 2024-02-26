@@ -4,7 +4,7 @@ import json
 import logging
 import gc
 import torch
-import socket
+import ast
 import threading
 from pathlib import Path
 from trt_llama_api import TrtLlmAPI
@@ -17,6 +17,7 @@ from llama_index.llms.llama_utils import messages_to_prompt, completion_to_promp
 from llama_index import set_global_service_context
 from faiss_vector_storage import FaissEmbeddingStorage
 from ui.user_interface import MainInterface
+
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 
@@ -38,6 +39,30 @@ def log_response(query, response, session_id):
     with open("chat_logs.jsonl", "a") as log_file:
         json.dump(log_entry, log_file)
         log_file.write("\n")  # For readability in the log file
+
+
+
+def log_completion_response(completion_response):
+    print(f"Received input: {completion_response}, Type: {type(completion_response)}")  # Debug print
+    try:
+        # Assuming CompletionResponse has a .text attribute
+        if not hasattr(completion_response, 'text'):
+            raise ValueError("completion_response must have a 'text' attribute.")
+        
+        user_prompt_text = getattr(completion_response, 'text', None)
+        if user_prompt_text is None:
+            raise ValueError("The 'text' attribute could not be found.")
+        
+        log_entry = {
+            "user_prompt": user_prompt_text,
+            "timestamp": time.time()
+        }
+        with open("test_user_prompt.jsonl", "a") as log_file:
+            json.dump(log_entry, log_file)
+            log_file.write("\n")
+    except Exception as e:
+        print(f"Failed to log completion response: {e}")
+
 
 def read_config(file_name):
     try:
@@ -389,6 +414,8 @@ def call_llm_streamed(query, session_id):
     full_response = ""
     partial_response = ""
     response = llm.stream_complete(query)
+    print("line 383 query ", query)
+
     print("line 383 repsone ", response)
 
 
@@ -464,11 +491,10 @@ def chatbot(query, chat_history, session_id):
     yield response_txt
 
 def stream_chatbot(query, chat_history, session_id):
-    print(chat_history)
+    print("439 chat history = ", chat_history)
     if data_source == "nodataset":
         for response in call_llm_streamed(query):
             yield response
-
         return
 
     if is_chat_engine:
@@ -494,7 +520,6 @@ def stream_chatbot(query, chat_history, session_id):
 
         # Find the file with the highest aggregated score
         highest_score_file = max(file_scores, key=file_scores.get, default=None)
-
         file_links = []
         seen_files = set()
         for token in response.response_gen:
@@ -503,7 +528,6 @@ def stream_chatbot(query, chat_history, session_id):
             yield partial_response
             # time.sleep(0.05)
         log_response(query, full_response, session_id)  # Log full response after the loop
-
 
         # time.sleep(0.2)
 
@@ -653,9 +677,20 @@ def handle_regenerate_index(source, path, session_id):
     print("on regenerate index", source, path, session_id)
 
 
+
 interface.on_regenerate_index(handle_regenerate_index)
 # render the interface
 interface.render()
+
+
+# def user_comp():
+#     user_prompt = "Do you like blues music?"
+#     completion_response = llm.complete(user_prompt)
+#     print({"text": completion_response.text, "status": 1} ) # Assuming success status is 1
+
+#     log_completion_response(completion_response)
+
+
 
 # def chat_response(user_prompt):
 #     print("line 657 user prompt ", user_prompt)
@@ -694,7 +729,4 @@ interface.render()
 #         conn, addr = server.accept()
 #         thread = threading.Thread(target=handle_client, args=(conn, addr))
 #         thread.start()
-
-# if __name__ == "__main__":
-#     run_server()
-    
+# run_server()

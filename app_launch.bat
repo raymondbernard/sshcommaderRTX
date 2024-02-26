@@ -41,9 +41,13 @@ for /f "tokens=1,* delims= " %%a in ('"%localappdata%\NVIDIA\MiniConda\Scripts\c
 if not "%env_path_found%"=="" (
     echo Environment path found: %env_path_found%
     call "%localappdata%\NVIDIA\MiniConda\Scripts\activate.bat" %env_path_found%
-    python verify_install.py
+    cd ChatWithRTX\RAG\trt-llm-rag-windows-main
+    start python verify_install.py
     start python app_sshtensortt.py
-    start streamlit run app_sshcommander.py
+    python app_background_ai.py 
+
+    @REM start streamlit run app_sshcommander.py
+    @REM start python test_client_tensortt.py 
     pause
 ) else (
     echo Environment with 'env_nvd_rag' not found.
