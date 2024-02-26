@@ -67,18 +67,16 @@ def config_ai_interface():
     st.sidebar.title("AI Configuration")
     config = load_ai_config()
 
+    # system_message = st.sidebar.text_area("System Message", value=config.get('SYSTEM_MESSAGE', DEFAULT_SYSTEM_MESSAGE))
 
-
-    system_message = st.sidebar.text_area("System Message", value=config.get('SYSTEM_MESSAGE', DEFAULT_SYSTEM_MESSAGE))
-
-    if st.sidebar.button("Save Configuration"):
-        new_config = {
-            "AI": "mistral 7b",
-            "SYSTEM_MESSAGE": system_message
-        }
-        save_ai_config(new_config)
-        st.sidebar.success("AI Configuration saved!")
-    return 
+    # if st.sidebar.button("Save Configuration"):
+    #     new_config = {
+    #         "AI": "mistral 7b",
+    #         "SYSTEM_MESSAGE": system_message
+    #     }
+    #     save_ai_config(new_config)
+    #     st.sidebar.success("AI Configuration saved!")
+    # return 
 
 def config_ai_interface():
     st.sidebar.title("Save Configs")
@@ -285,14 +283,6 @@ def server_input_form(servers, editing_index, key, title, save_function):
             "commands": [cmd.strip() for cmd in commands.split('\n') if cmd.strip()]
         }
 
-        # config = load_ai_config()
-        # AI = config['AI']
-        # Check for AI response
-    
-        # ai_response = call_ai(AI, commands)
-        # print("AI Response:", ai_response)  # Replace with logging if appropriate
-        # server_info["config_description"] = ai_response
-        # st.text_area("AI's Configuration Description", value=ai_response, key="updated_description")
 
         # Save or update the server information
         if editing_index is not None:
@@ -464,7 +454,7 @@ def main():
     init_session_variables()
     load_config()
     load_ai_config()
-    config_ai_interface()
+    # config_ai_interface()
     load_tests()
     ssh_conn_form()
     buttons()
