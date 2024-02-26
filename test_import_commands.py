@@ -1,9 +1,20 @@
 import json
 import logging
-
+import os 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG, filename='process_logs_debug.log', filemode='w',
                     format='%(asctime)s - %(levelname)s - %(message)s')
+
+import os
+
+# Access the %LOCALAPPDATA% environment variable directly
+local_app_data = os.getenv('LOCALAPPDATA')
+
+# Append the specific path to it
+COMMAND_LOGS = os.path.join(local_app_data, "NVIDIA", "ChatWithRTX", "RAG", "trt-llm-rag-windows-main", "commands_logs.jsonl")
+
+print(f"The path to COMMAND_LOGS is: {COMMAND_LOGS}")
+
 
 # Base structure for a single server configuration
 def create_server_config(commands=[]):
@@ -11,7 +22,7 @@ def create_server_config(commands=[]):
         "address": "leaf01",
         "username": "cumulus",
         "password": "cumulus",
-        "config_description": "Configuration details will be dynamically updated based on command logs.",
+        "config_description": "",
         "commands": commands
     }
 
@@ -23,10 +34,10 @@ config = {
     "username": "ubuntu"
 }
 
-def process_logs(file_path):
+def process_logs(COMMAND_LOGS):
     logging.info("Starting to process log file.")
     try:
-        with open(file_path, 'r') as file:
+        with open(COMMAND_LOGS, 'r') as file:
             for line in file:
                 try:
                     log_entry = json.loads(line)
@@ -43,12 +54,12 @@ def process_logs(file_path):
                 except json.JSONDecodeError as e:
                     logging.error(f"Error decoding JSON from line: {e}")
     except FileNotFoundError:
-        logging.error(f"File {file_path} not found.")
+        logging.error(f"File {COMMAND_LOGS} not found.")
     except Exception as e:
         logging.error(f"An unexpected error occurred: {e}")
 
-# Process the log file
-process_logs('commands_logs.jsonl')
+# Process the log filr
+process_logs(COMMAND_LOGS)
 
 # Save the updated configuration to a file
 with open('config.json', 'w') as outfile:

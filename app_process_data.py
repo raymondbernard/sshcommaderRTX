@@ -1,101 +1,31 @@
-import os
-import time
 import json
+import os 
 import logging
 # import gc 
 import json 
-import torch
 import re 
-from pathlib import Path
-from trt_llama_api import TrtLlmAPI
-from collections import defaultdict
-from faiss_vector_storage import FaissEmbeddingStorage
-from ui.user_interface import MainInterface
+
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 
-MODEL_CONFIG_FILE = '.\\config\\config.json'
-PREFERANCE_CONFIG_FILE = '.\\config\\preferences.json'
-SYSTEM_MESSAGE_FILE = 'config_ai.json'
-CONFIG_JSON_FILE = 'config.json'
+# import commands     
+local_app_data = os.getenv('LOCALAPPDATA')
 
-def read_system_message(SYSTEM_MESSAGE_FILE):
-    try:
-        with open(SYSTEM_MESSAGE_FILE, 'r') as file:
-            data = json.load(file)
-            system_message = data.get("SYSTEM_MESSAGE", "Key not found.")
-            print(system_message)
-    except FileNotFoundError:
-        print("JSON file not found.")
-    except json.JSONDecodeError:
-        print("Error decoding JSON.")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    return system_message
-
-
-def run_once(func):
-    """Function decorator that ensures the function runs only once."""
-    result = {}
-
-    def wrapper(*args, **kwargs):
-        if func not in result:
-            result[func] = func(*args, **kwargs)
-        return result[func]
+# Append the specific path to it
+COMMAND_LOGS = os.path.join(local_app_data, "NVIDIA", "ChatWithRTX", "RAG", "trt-llm-rag-windows-main", "commands_logs.jsonl")
     
-    return wrapper
+# Append the specific path to it
+CHAT_LOGS = os.path.join(local_app_data, "NVIDIA", "ChatWithRTX", "RAG", "trt-llm-rag-windows-main", "chat_logs.jsonl")
+
+# Append the specific path to it
+CONFIG_JSON= os.path.join(local_app_data, "NVIDIA", "ChatWithRTX", "RAG", "trt-llm-rag-windows-main", "config.json")
 
 
-def read_config(file_name):
-    try:
-        with open(file_name, 'r') as file:
-            return json.load(file)
-    except FileNotFoundError:
-        print(f"The file {file_name} was not found.")
-    except json.JSONDecodeError:
-        print(f"There was an error decoding the JSON from the file {file_name}.")
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-    return None
-
-def get_model_config(config, model_name=None):
-    models = config["models"]["supported"]
-    selected_model = next((model for model in models if model["name"] == model_name), models[0])
-    return {
-        "model_path": os.path.join(os.getcwd(), selected_model["metadata"]["model_path"]),
-        "engine": selected_model["metadata"]["engine"],
-        "tokenizer_path": os.path.join(os.getcwd(), selected_model["metadata"]["tokenizer_path"]),
-        "max_new_tokens": selected_model["metadata"]["max_new_tokens"],
-        "max_input_token": selected_model["metadata"]["max_input_token"],
-        "temperature": selected_model["metadata"]["temperature"]
-    }
+# Append the specific path to it
+CONFIG_AI= os.path.join(local_app_data, "NVIDIA", "ChatWithRTX", "RAG", "trt-llm-rag-windows-main", "config_ai.json")
 
 
-@run_once
-def initialize_llm():
- 
-    # read model specific config
-    selected_model_name = None
-    config = read_config(MODEL_CONFIG_FILE)
-    if os.path.exists(PREFERANCE_CONFIG_FILE):
-        perf_config = read_config(PREFERANCE_CONFIG_FILE)
-        selected_model_name = perf_config.get('models', {}).get('selected')
-
-    model_config = get_model_config(config, selected_model_name)
-
-    # create trt_llm engine object
-    llm = TrtLlmAPI(
-        model_path=model_config["model_path"],
-        engine_name=model_config["engine"],
-        tokenizer_dir=model_config["tokenizer_path"],
-        temperature=model_config["temperature"],
-        max_new_tokens=model_config["max_new_tokens"],
-        context_window=model_config["max_input_token"],
-        verbose=False
-    )
-    return llm 
-    
 
 ## Extract Chat_logs to prepare them to import commands function 
 def process_response(response):
@@ -118,11 +48,9 @@ def process_response(response):
 
 def process_chat_log():
     # File paths
-    input_file_path = 'C:\\Users\\RayBe\\AppData\\Local\\NVIDIA\\ChatWithRTX\\RAG\\trt-llm-rag-windows-main\\chat_logs.jsonl'
-    output_file_path = 'C:\\Users\\RayBe\\AppData\\Local\\NVIDIA\\ChatWithRTX\\RAG\\trt-llm-rag-windows-main\\commands_logs.jsonl'
 
     # Processing each line in the file
-    with open(input_file_path, 'r') as input_file, open(output_file_path, 'w') as output_file:
+    with open(CHAT_LOGS, 'r') as input_file, open(COMMAND_LOGS, 'w') as output_file:
         for line in input_file:
             data = json.loads(line)
             # Process the response to extract the desired content
@@ -131,10 +59,11 @@ def process_chat_log():
             output_file.write(json.dumps(data) + '\n')
 
     # Setup logging
-    logging.basicConfig(level=logging.DEBUG, filename='process_logs_debug.log', filemode='w',
+    logging.basicConfig(level=logging.DEBUG,
+                        filename='process_logs_debug.log',
+                        filemode='w',
                         format='%(asctime)s - %(levelname)s - %(message)s')
 
-# import Commands Functions 
 # Base structure for a single server configuration
 def create_server_config(commands=[]):
     return {
@@ -145,19 +74,18 @@ def create_server_config(commands=[]):
         "commands": commands
     }
 
-## Interm step setting up commands_logs.jsonl 
-def process_logs(file_path):
-    # Initialize the config structure with an empty servers list
-    config = {
-        "servers": [],
-        "hostname": "worker07.air.nvidia.com",
-        "port": 25374,
-        "username": "ubuntu"
-    }
+# Initialize the config structure with an empty servers list
+config = {
+    "servers": [],
+    "hostname": "worker07.air.nvidia.com",
+    "port": 25374,
+    "username": "ubuntu"
+}
 
+def process_logs(COMMAND_LOGS):
     logging.info("Starting to process log file.")
     try:
-        with open(file_path, 'r') as file:
+        with open(COMMAND_LOGS, 'r') as file:
             for line in file:
                 try:
                     log_entry = json.loads(line)
@@ -174,12 +102,70 @@ def process_logs(file_path):
                 except json.JSONDecodeError as e:
                     logging.error(f"Error decoding JSON from line: {e}")
     except FileNotFoundError:
-        logging.error(f"File {file_path} not found.")
+        logging.error(f"File {COMMAND_LOGS} not found.")
     except Exception as e:
-            logging.error(f"An unexpected error occurred: {e}")
+        logging.error(f"An unexpected error occurred: {e}")
 
-    # Process the log file
-    process_logs('commands_logs.jsonl')
+
+
+def system_message(file_path):
+    # This list will hold all extracted texts following the triple backticks
+    post_commands_texts = []
+
+    with open(file_path, 'r') as file:
+        for line in file:
+            try:
+                # Parse the JSON object from each line
+                data = json.loads(line)
+                
+                # Extract the response field
+                response = data.get('response', '')
+                
+                # Use a regular expression to find the text after the triple backticks
+                match = re.search(r'```\n.*?\n```\n(.+)', response, re.DOTALL)
+                if match:
+                    # Extract the text after the triple backticks
+                    post_command_text = match.group(1).strip()
+                    post_commands_texts.append(post_command_text)
+            except json.JSONDecodeError:
+                print("Error decoding JSON from line:", line)
+                continue
+    
+    return post_commands_texts
+
+def update_config_description(CONFIG_JSON, extracted_texts):
+    # Load the JSON data from the config file
+    with open(CONFIG_JSON, 'r') as file:
+        config_data = json.load(file)
+
+    # Initialize an index to iterate through the extracted_texts list
+    text_index = 0
+    
+    # Ensure there are extracted texts to use for updates
+    if not extracted_texts:
+        print("No extracted texts available for updates.")
+        return
+    
+    # Iterate over the servers in the config
+    for server in config_data['servers']:
+        # Check if config_description is empty and an extracted text is available
+        if not server['config_description'] and text_index < len(extracted_texts):
+            server['config_description'] = extracted_texts[text_index]
+            text_index += 1  # Move to the next extracted text for the next server
+
+    # Write the updated JSON data back to the file
+    with open(CONFIG_JSON, 'w') as file:
+        json.dump(config_data, file, indent=4)
+
+
+
+# Main Application Logic
+def main():
+    # Define the path to your cha_logs file
+    file_path = CHAT_LOGS
+
+    
+    process_logs(COMMAND_LOGS)
 
     # Save the updated configuration to a file
     with open('config.json', 'w') as outfile:
@@ -187,43 +173,12 @@ def process_logs(file_path):
 
     logging.info("Configuration has been successfully updated and saved.")
     print("Configuration processing complete. Check 'process_logs_debug.log' for details.")
+    # Extract texts from cha_logs
+    extracted_texts = system_message(file_path)
 
+    # Update the config.json file with extracted texts
+    update_config_description(CONFIG_JSON, extracted_texts)
 
-# Update the file config.json file to SSH_sshcommander.py 
-# Call LLM to fill in config_scrtiption to the config.json which ssh_commader.py presents user
-def update_config_descriptions(config_file_path, system_message, llm):
-    # Load the JSON data from the file
-    with open(config_file_path, 'r') as file:
-        config_data = json.load(file)
-
-    # Iterate over each server in the config
-    for server in config_data["servers"]:
-        # Check if config_description needs to be updated
-        if  server["config_description"] == "":
-            # user_prompt = system_message + ', '.join(server["commands"])
-            user_prompt = "who is bb king?"
-
-            completion_response = llm.complete(user_prompt)
-            # Adjust access method here based on the actual structure of CompletionResponse
-            # if hasattr(completion_response, 'status') and completion_response.status == 1:
-            server["config_description"] = completion_response.text
-
-    # Write the updated configuration back to the config.json file
-    with open(config_file_path, 'w') as file:
-        json.dump(config_data, file, indent=4, ensure_ascii=False)
-
-
-# Main Application Logic
-def main():
- 
-    # Example usage
-    # llm = initialize_llm()  # This initializes the LLM and returns the instance.
-    # another_llm_instance = initialize_llm()  # This will return the same instance as before without re-initializing.
-
-
-    process_chat_log()
-    # system_message = read_system_message(SYSTEM_MESSAGE_FILE)
-    # update_config_descriptions(CONFIG_JSON_FILE, system_message, llm)
 
 if __name__=="__main__":
     main()

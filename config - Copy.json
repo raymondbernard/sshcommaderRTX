@@ -1,0 +1,91 @@
+{
+    "servers": [
+        {
+            "address": "leaf01",
+            "username": "cumulus",
+            "password": "cumulus",
+            "config_description": "These commands are setting the IP addresses for various network interfaces on a device running Nvidia's cumulus Linux distribution. Here's a breakdown of each command:\n\n* `nv set interface swp1s0 ip address 10.1.1.1/31`: This command sets the IP address for the `swp1s0` interface to `10.1.1.1/31`. The `/31` at the end of the IP address indicates that the subnet mask is `255.255.255.254`, which means that the interface has a subnet mask of `255.255.255.254`.\n* `nv set interface swp1s1 ip address 10.1.1.5/31`: This command sets the IP address for the `swp1s1` interface to `10.1.1.5/31`.\n* `nv set interface swp1s2 ip address 10.1.1.9/31`: This command sets the IP address for the `swp1s2` interface to `10.1.1.9/31`.\n* `nv set interface swp1s3 ip address 10.1.1.13/31`: This command sets the IP address for the `swp1s3` interface to `10.1.1.13/31`.\n* `nv set interface swp2s0 ip address 10.1.1.17/31`: This command sets the IP address for the `swp2s0` interface to `10.1.1.17/31`.\n* `nv set interface swp2s1 ip address 10.1.1.21/31`: This command sets the IP address for the `swp2s1` interface to `10.1.1.21/31`.\n* `nv set interface swp4s2 ip address 10.1.1.57/31`: This command sets the IP address for the `swp4s2` interface to `10.1.1.57/31`.\n* `nv set interface swp4s3 ip address 10.1.1.61/31`: This command sets the IP address for the `swp4s3` interface to `10.1.1.61/31`.\n* `nv set interface swp61 ip address 172.16.1.28/31`: This command sets the IP address for the `swp61` interface to `172.16.1.28/31`.\n* `nv set interface swp62 ip address 172.16.1.30/31`: This command sets the IP address for the `swp62` interface to `172.16.1.30/31`.\n* `nv set interface swp63 ip address 172.16.1.32/31`: This command sets the IP address for the `swp63` interface to `172.16.1.32/31`.\n* `nv set interface swp64 ip address 172.16.1.34/31`: This command sets the IP address for the `swp64` interface to `172.16.1.34/31`.\n\nIn summary, these commands are setting the IP addresses for various network interfaces on a device running Nvidia's cumulus Linux distribution.",
+            "commands": [
+                "nv set interface swp1s0 ip address 10.1.1.1/31",
+                "nv set interface swp1s1 ip address 10.1.1.5/31",
+                "nv set interface swp1s2 ip address 10.1.1.9/31",
+                "nv set interface swp1s3 ip address 10.1.1.13/31",
+                "nv set interface swp2s0 ip address 10.1.1.17/31",
+                "nv set interface swp2s1 ip address 10.1.1.21/31",
+                "nv set interface swp4s2 ip address 10.1.1.57/31",
+                "nv set interface swp4s3 ip address 10.1.1.61/31",
+                "nv set interface swp61 ip address 172.16.1.28/31",
+                "nv set interface swp62 ip address 172.16.1.30/31",
+                "nv set interface swp63 ip address 172.16.1.32/31",
+                "nv set interface swp64 ip address 172.16.1.34/31"
+            ]
+        },
+        {
+            "address": "leaf01",
+            "username": "cumulus",
+            "password": "cumulus",
+            "config_description": "The commands you see are setting the IP addresses for two virtual LAN (VLAN) interfaces on a network device.\n\nThe first command, `nv set interface vlan121 ip address 10.130.121.2/24`, sets the IP address for VLAN 121 to 10.130.121.2/24.\n\nThe second command, `nv set interface vlan122 ip address 10.130.122.2/24`, sets the IP address for VLAN 122 to 10.130.122.2/24.\n\nThese commands are used to configure the IP addresses for the VLAN interfaces on a network device, which allows the device to communicate with other devices on the network.",
+            "commands": [
+                "nv set interface vlan121 ip address 10.130.121.2/24",
+                "nv set interface vlan122 ip address 10.130.122.2/24"
+            ]
+        },
+        {
+            "address": "leaf01",
+            "username": "cumulus",
+            "password": "cumulus",
+            "config_description": "The `nv` command is used to configure the NVIDIA GPU on a Linux system. The `set` subcommand is used to set various configuration options for the GPU.\n\nThe `qos` subcommand is used to configure the Quality of Service (QoS) settings for the GPU. The `roce` subcommand is used to configure the RoCE (RDMA over Converged Ethernet) settings for the GPU.\n\nThe `enable` option is used to enable the RoCE feature for the GPU. The `lossless` option is used to configure the RoCE mode to use lossless compression.\n\nTherefore, the command `nv set qos roce enable on` enables the RoCE feature for the GPU, and the command `nv set qos roce mode lossless` configures the RoCE mode to use lossless compression.",
+            "commands": [
+                "nv set qos roce enable on",
+                "nv set qos roce mode lossless"
+            ]
+        },
+        {
+            "address": "leaf01",
+            "username": "cumulus",
+            "password": "cumulus",
+            "config_description": "The commands you provided are related to configuring a router policy using Nvidia's Cumulus Linux distribution. Here's a breakdown of each command:\n\n1. `nv set router policy prefix-list dgx_subnet rule 10 action permit`: This command sets the action for rule 10 in the prefix-list \"dgx_subnet\" to \"permit\". This means that any traffic that matches this rule will be allowed to pass through the router.\n2. `nv set router policy prefix-list dgx_subnet rule 10 match 10.1.1.0/24 max-prefix-len 31`: This command sets the match criteria for rule 10 in the prefix-list \"dgx_subnet\" to \"10.1.1.0/24\" with a maximum prefix length of 31. This means that any traffic that has a destination IP address within the range of \"10.1.1.0/24\" and a prefix length of 31 or less will match this rule.\n3. `nv set router policy prefix-list dgx_subnet type ipv4`: This command sets the type of the prefix-list \"dgx_subnet\" to \"ipv4\". This means that the prefix-list will only match IPv4 traffic.",
+            "commands": [
+                "nv set router policy prefix-list dgx_subnet rule 10 action permit",
+                "nv set router policy prefix-list dgx_subnet rule 10 match 10.1.1.0/24 max-prefix-len 31",
+                "nv set router policy prefix-list dgx_subnet type ipv4"
+            ]
+        },
+        {
+            "address": "leaf01",
+            "username": "cumulus",
+            "password": "cumulus",
+            "config_description": "The command `nv show router policy prefix-list dgx_subnet rule 10` is used to display the details of a specific rule in a prefix-list on a NVIDIA Cumulus Linux router.\n\nThe `nv` command is used to interact with the NVIDIA Cumulus Linux router, and the `show` command is used to display information about the router. The `router` command is used to specify the router to which the command should be applied. The `policy` command is used to specify the policy to which the rule belongs. The `prefix-list` command is used to specify the prefix-list to which the rule belongs. The `dgx_subnet` command is used to specify the subnet to which the rule belongs. The `rule` command is used to specify the rule number to display.\n\nFor example, if you want to display the details of rule 10 in the `dgx_subnet` prefix-list on a NVIDIA Cumulus Linux router, you would use the following command:\n```\nnv show router policy prefix-list dgx_subnet rule 10\n```\nThis command will display the details of rule 10 in the `dgx_subnet` prefix-list, including the rule number, the prefix, the mask, and any other relevant information.",
+            "commands": [
+                "nv show router policy prefix-list dgx_subnet rule 10"
+            ]
+        },
+        {
+            "address": "leaf01",
+            "username": "cumulus",
+            "password": "cumulus",
+            "config_description": "The first command sets the default router for the BGP neighbor with IP address 10.10.10.2 to the loopback interface of the leaf02 switch.\n\nThe second command sets the IP VRF for the interfaces swp1s0-3, swp2s0-3, swp3s0-3, and swp4s0-3 to \"tenant1\".",
+            "commands": [
+                "nv set vrf default router bgp neighbor 10.10.10.2 description to-leaf02-loopback",
+                "nv set interface swp1s0-3swp2s0-3swp3s0-3swp4s0-3 ip vrf tenant1"
+            ]
+        },
+        {
+            "address": "leaf01",
+            "username": "cumulus",
+            "password": "cumulus",
+            "config_description": "These are commands used to configure Border Gateway Protocol (BGP) on a router in a virtualized environment using Nvidia's Cumulus Linux distribution.\n\nHere's a breakdown of each command:\n\n1. `nv set vrf tenant1 router bgp enable on`: This command enables BGP on the router for the virtual network (VRF) named \"tenant1\".\n2. `nv set vrf tenant1 router bgp autonomous-system 65101`: This command sets the autonomous system (AS) number for the router to 65101.\n3. `nv set vrf tenant1 router bgp router-id 10.10.10.1`: This command sets the router ID for the router to 10.10.10.1.\n4. `nv set vrf tenant1 router bgp rd 10.10.10.1:4001`: This command sets the route distinguisher (RD) for the router to 10.10.10.1:4001.\n5. `nv set vrf tenant1 router bgp address-family ipv4-unicast enable on`: This command enables IPv4 unicast address family for BGP on the router.\n6. `nv set vrf tenant1 router bgp address-family l2vpn-evpn enable on`: This command enables Layer 2 Virtual Private Network (L2VPN) Ethernet Virtual Private Network (EVPN) address family for BGP on the router.\n\nThese commands are used to configure BGP on a router in a virtualized environment using Nvidia's Cumulus Linux distribution. The commands are used to enable BGP, set the AS number, router ID, and RD, and enable IPv4 unicast and L2VPN-EVPN address families for BGP.",
+            "commands": [
+                "nv set vrf tenant1 router bgp enable on",
+                "nv set vrf tenant1 router bgp autonomous-system 65101",
+                "nv set vrf tenant1 router bgp router-id 10.10.10.1",
+                "nv set vrf tenant1 router bgp rd 10.10.10.1: 4001",
+                "nv set vrf tenant1 router bgp address-family ipv4-unicast enable on",
+                "nv set vrf tenant1 router bgp address-family l2vpn-evpn enable on"
+            ]
+        }
+    ],
+    "hostname": "worker07.air.nvidia.com",
+    "port": 25374,
+    "username": "ubuntu"
+}
