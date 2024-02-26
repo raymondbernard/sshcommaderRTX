@@ -163,8 +163,8 @@ def update_config_description(CONFIG_JSON, extracted_texts):
 def main():
     # Define the path to your cha_logs file
     file_path = CHAT_LOGS
+    process_chat_log()
 
-    
     process_logs(COMMAND_LOGS)
 
     # Save the updated configuration to a file
