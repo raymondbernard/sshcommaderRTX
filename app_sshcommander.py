@@ -15,7 +15,6 @@ CONFIG_AI_FILE = "config_ai.json"
 
 # AI  = "call_openai"
 ## command out below if ou use call_openai 
-URL = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/df2bee43-fb69-42b9-9ee5-f4eabbeaf3a8" ## user for only Nvidia 
 DEFAULT_AI = "call_nvidi" 
 DEFAULT_SYSTEM_MESSAGE  = "Note we are using Nvidia's cumulus Linux distribution, just describe the commands you see.   Please keep your responses short and precise."
 
@@ -50,8 +49,7 @@ def load_ai_config():
             config = json.load(file)
             config['AI'] = config.get('AI', DEFAULT_AI)
             config['SYSTEM_MESSAGE'] = config.get('SYSTEM_MESSAGE', DEFAULT_SYSTEM_MESSAGE)
-            if config['AI'] == "call_nvidi":
-                config['URL'] = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/df2bee43-fb69-42b9-9ee5-f4eabbeaf3a8"
+            
             return config
     except Exception as e:
         print(f"Error loading config: {e}")
@@ -68,24 +66,18 @@ def config_ai_interface():
     st.sidebar.title("AI Configuration")
     config = load_ai_config()
 
-    if config is not None and 'AI' in config:
-        ai_choice = st.sidebar.selectbox(
-            "Choose AI Service", 
-            ["call_nvidi", "call_openai"], 
-            index=["call_nvidi", "call_openai"].index(config['AI'])
-        )
-    else:
-        st.sidebar.error("Configuration not found or is invalid.")
-        return  # Exit the function
+
 
     system_message = st.sidebar.text_area("System Message", value=config.get('SYSTEM_MESSAGE', DEFAULT_SYSTEM_MESSAGE))
+
     if st.sidebar.button("Save Configuration"):
         new_config = {
-            "AI": ai_choice,
+            "AI": "mistral 7b",
             "SYSTEM_MESSAGE": system_message
         }
         save_ai_config(new_config)
         st.sidebar.success("AI Configuration saved!")
+    return 
 
 def config_ai_interface():
     st.sidebar.title("Save Configs")
@@ -94,7 +86,7 @@ def config_ai_interface():
     if st.sidebar.button("Save Configuration"):
         new_config = {
             "AI": "na",
-            # "SYSTEM_MESSAGE": system_message
+            "SYSTEM_MESSAGE": system_message
         }
         save_ai_config(new_config)
         st.sidebar.success("AI Configuration saved!")
@@ -369,6 +361,7 @@ def display_servers(servers, editing_index_key, section, delete_function, rerun_
 def call_ai(ai_type, commands):
     with st.spinner('Waiting for AI response...'):
         print("Calling Nvidia Local")
+        
         return call_nvidia(commands)
     
 
@@ -442,6 +435,7 @@ def markdown_file():
             )
         else:
             st.error(f"Please configure your devices first. Before you read the config, since the File {config_file} was not yet created.")
+
 
 # Main Application Logic
 def main():
