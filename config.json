@@ -4,10 +4,60 @@
             "address": "",
             "username": "",
             "password": "",
-            "timestamp": "",
+            "timestamp": "1709046149.648215",
+            "config_description": "This will display the startup configuration of all leaf switches in the current configuration.\n\nIf you want to view the startup configuration of a specific leaf switch, you can use the following command:\n```bash\nnv config show -o commands | grep \"leaf\" | grep \"leaf1\"\n```\nThis will display the startup configuration of the leaf switch named \"leaf1\" in the current configuration.\n\nNote that the startup configuration of each leaf switch is stored in the `startup.yaml` file located at `/etc/nvue.d/startup.yaml`. You can view the contents of this file using the following command:\n```bash\ncat /etc/nvue.d/startup.yaml\n```\nThis will display the contents of the `startup.yaml` file, which contains the startup configuration of all leaf switches.",
+            "commands": [
+                "bash",
+                "nv set qos roce enable on",
+                "nv set qos roi mode lossless"
+            ]
+        },
+        {
+            "address": "",
+            "username": "",
+            "password": "",
+            "timestamp": "1709046655.0818853",
             "config_description": "",
             "commands": [
-                ""
+                "bash",
+                "# Configure the first switch port",
+                "nv set interface swp192s0 ip address 192.168.0.1/24",
+                "",
+                "# Configure the remaining 15 switch ports",
+                "for i in {2..16}; do",
+                "    nv set interface swp192s$i ip address 192.168.0.$((i))/24",
+                "done"
+            ]
+        },
+        {
+            "address": "",
+            "username": "",
+            "password": "",
+            "timestamp": "1709046694.9621906",
+            "config_description": "",
+            "commands": [
+                "bash",
+                "nv config show -o commands",
+                "",
+                "bash",
+                "nv config show -o commands | grep \"leaf\"",
+                "",
+                "bash",
+                "nv config show -o commands | grep \"leaf\" | grep \"leaf1\"",
+                "",
+                "bash",
+                "cat /etc/nvue.d/startup.yaml"
+            ]
+        },
+        {
+            "address": "",
+            "username": "",
+            "password": "",
+            "timestamp": "1709046721.9347694",
+            "config_description": "",
+            "commands": [
+                "bash",
+                "nv set interface vlan121 ip address 10.130.121.2/24"
             ]
         }
     ],

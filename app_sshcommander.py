@@ -5,8 +5,8 @@ import os
 import json
 import time
 import select 
-import socket
-from app_process_data import main 
+import os
+import app_process_data
 
 # Constants
 CONFIG_FILE = "config.json"
@@ -18,32 +18,129 @@ CONFIG_AI_FILE = "config_ai.json"
 DEFAULT_AI = "call_nvidi" 
 DEFAULT_SYSTEM_MESSAGE  = "Note we are using Nvidia's cumulus Linux distribution, just describe the commands you see.   Please keep your responses short and precise."
 
-col1, col2 = st.columns([1, 15])  # The numbers define the relative width of each column
-main()
+
+
+
+# Path to your files
+chat_log_file_path = 'chat_logs.jsonl'
+config_file_path = 'config.json'
+
+# Read chat log entries
+chat_logs = []
+
+# Read chat log entries
+chat_logs = []
+with open(chat_log_file_path, 'r') as file:
+    for line in file:
+        chat_logs.append(json.loads(line))
+
+# Load existing configuration
+with open(config_file_path, 'r') as file:
+    config = json.load(file)
+
+# Helper function to check if the timestamp is unique
+def is_timestamp_unique(servers, timestamp):
+    return all(server.get("timestamp", "") != timestamp for server in servers)
+
+
+# Process and update configuration with chat log entries
+for entry in chat_logs:
+    timestamp = str(entry["timestamp"])
+    if is_timestamp_unique(config["servers"], timestamp):
+        new_server_config = {
+            "address": "",  # Determine how to handle this
+            "username": "",  # Determine how to handle this
+            "password": "",  # Determine how to handle this
+            "timestamp": timestamp,
+            "config_description": entry["response"],
+            "commands": entry["response"].split('\n')  # Adjust as necessary
+        }
+        # Add the new server configuration to the list of servers
+        config["servers"].append(new_server_config)
+    else:
+        print(f"Skipping duplicate timestamp: {timestamp}")
+
+# Save the updated configuration
+with open(config_file_path, 'w') as file:
+    json.dump(config, file, indent=4)
+
+# Save the updated configuration
+with open(config_file_path, 'w') as file:
+    json.dump(config, file, indent=4)
 
 # Display the logo in the first column
-with col1:
-    st.image(".\\ui\\assets\\nvidia_logo.png", width=42)  # Adjust path and width as needed
-with col2:
-    # Use HTML to customize the font size and any other styles
-    st.markdown("""
-    <style>
-    .font {
-        font-size:30px;  # You can adjust the font size here
-    }
-    </style>
-    <div class="font">
-        SSH Commander with RTX<br>
-    </div>
-    """, unsafe_allow_html=True)
+def display_ui():
+    col1, col2 = st.columns([1, 15])
+    with col1:
+        st.image(os.path.join("ui", "assets", "nvidia_logo.png"), width=42)
+    with col2:
+        st.markdown("""
+        <style>
+        .font {
+            font-size:30px;
+        }
+        </style>
+        <div class="font">
+            SSH Commander with RTX<br>
+        </div>
+        """, unsafe_allow_html=True)
 
+# Define file paths
+local_app_data = os.getenv('LOCALAPPDATA')
+COMMAND_LOGS = os.path.join(local_app_data, "NVIDIA", "ChatWithRTX", "RAG", "trt-llm-rag-windows-main", "commands_logs.jsonl")
+CHAT_LOGS = os.path.join(local_app_data, "NVIDIA", "ChatWithRTX", "RAG", "trt-llm-rag-windows-main", "chat_logs.jsonl")
+CONFIG_JSON = os.path.join(local_app_data, "NVIDIA", "ChatWithRTX", "RAG", "trt-llm-rag-windows-main", "config.json")
 
+def parse_chat_logs(file_path):
+    chat_logs = []
+    with open(file_path, 'r') as file:
+        for line in file:
+            try:
+                chat_logs.append(json.loads(line))
+            except json.JSONDecodeError:
+                print("Error decoding JSON from line:", line)
+    return chat_logs
+
+chat_logs = parse_chat_logs(CHAT_LOGS)
+
+def find_and_edit_server_config(timestamp, new_data):
+    configs = safe_load_json(CONFIG_FILE, default={'servers': []})
+    for server in configs['servers']:
+        if server.get('timestamp') == timestamp:
+            server.update(new_data)  # Update the server data with new_data
+            break
+    save_config(configs)  # Save the updated configs back to the file
+
+def save_config(config_data):
+    with open(CONFIG_FILE, "w") as f:
+        json.dump(config_data, f, indent=4)
+    st.success("Configuration saved successfully.")
+
+def update_server_config(config, server_updates):
+    updated = False
+    for update in server_updates:
+        # Find if the server already exists based on a unique attribute, e.g., address
+        for server in config['servers']:
+            if server['address'] == update['address']:
+                server.update(update)  # Update existing server details
+                updated = True
+                break
+        if not updated:
+            # Add a new server configuration if not updated
+            config['servers'].append(update)
+
+def safe_load_json(filename, default=None):
+    try:
+        with open(filename, 'r') as file:
+            return json.load(file)
+    except Exception as e:
+        st.error(f"Failed to load {filename}: {e}")
+        return default
 def save_ai_config(config):
     with open(CONFIG_AI_FILE, 'w') as file:
         json.dump(config, file)
 
 # Streamlit sidebar interface for changing AI configuration
-
 def load_ai_config():
     try:
         with open('config_ai.json', 'r') as file:
@@ -62,21 +159,29 @@ def save_ai_config(config):
     with open(CONFIG_AI_FILE, 'w') as file:
         json.dump(config, file)
 
+def load_json(filename, default=None):
+    try:
+        with open(filename, 'r') as file:
+            return json.load(file)
+    except Exception as e:
+        st.error(f"Failed to load {filename}: {e}")
+        return default
+
+def save_json(filename, data):
+    with open(filename, 'w') as f:
+        json.dump(data, f, indent=4)
+    st.success("Configuration saved successfully.")
+
+
 
 def config_ai_interface():
     st.sidebar.title("AI Configuration")
-    config = load_ai_config()
-
-    # system_message = st.sidebar.text_area("System Message", value=config.get('SYSTEM_MESSAGE', DEFAULT_SYSTEM_MESSAGE))
-
-    # if st.sidebar.button("Save Configuration"):
-    #     new_config = {
-    #         "AI": "mistral 7b",
-    #         "SYSTEM_MESSAGE": system_message
-    #     }
-    #     save_ai_config(new_config)
-    #     st.sidebar.success("AI Configuration saved!")
-    # return 
+    config = load_json(CONFIG_AI_FILE, default={"AI": DEFAULT_AI, "SYSTEM_MESSAGE": DEFAULT_SYSTEM_MESSAGE})
+    system_message = st.sidebar.text_area("System Message", value=config.get('SYSTEM_MESSAGE', DEFAULT_SYSTEM_MESSAGE))
+    if st.sidebar.button("Save Configuration"):
+        config['SYSTEM_MESSAGE'] = system_message
+        save_json(CONFIG_AI_FILE, config)
+        st.sidebar.success("AI Configuration saved!")
 
 def config_ai_interface():
     st.sidebar.title("Save Configs")
@@ -93,6 +198,8 @@ def config_ai_interface():
 
 # Initialize session state variables
 def init_session_variables():
+    if 'editing_index' not in st.session_state:
+        st.session_state.editing_index = None
     if 'hostname' not in st.session_state:
         st.session_state.hostname = ''
     if 'port' not in st.session_state:
@@ -105,6 +212,8 @@ def init_session_variables():
         st.session_state.key_filename_path = None
     if 'servers' not in st.session_state:
         st.session_state.servers = []
+    if 'timestamp' not in st.session_state:
+        st.session_state.timestamp = ''
     if 'editing_index' not in st.session_state:
         st.session_state.editing_index = None
     if 'tests' not in st.session_state:
@@ -154,7 +263,7 @@ def load_config():
             st.session_state.hostname = data.get("hostname", "")
             st.session_state.port = data.get("port", 22)
             st.session_state.username = data.get("username", "")
-
+        
 def load_tests():
     if os.path.exists(TEST_FILE):
         with open(TEST_FILE, "r") as f:
@@ -265,7 +374,7 @@ def server_input_form(servers, editing_index, key, title, save_function):
         address = st.text_input("Address of server/device", value=editing_server.get("address", st.session_state.server_address)).strip()
         server_username = st.text_input("Username", value=editing_server.get("username", st.session_state.server_username)).strip()
         server_password = st.text_input("Password (optional)", type="password", value=editing_server.get("password", st.session_state.server_password)).strip()
-        commands = st.text_area("Commands (one per line)", value="\n".join(editing_server.get("commands", []))).strip()
+        commands = st.text_area("Commands (one perline)", value="\n".join(editing_server.get("commands", []))).strip()
         submit_button = st.form_submit_button("Save configuration")
     
     if submit_button:
@@ -287,6 +396,7 @@ def server_input_form(servers, editing_index, key, title, save_function):
         # Save or update the server information
         if editing_index is not None:
             servers[editing_index] = server_info
+            ## Rewirte out to Chat_log
             st.session_state.editing_index = None
         else:
             servers.append(server_info)
@@ -325,7 +435,6 @@ def buttons():
                 if 'original_ssh_client' in locals() and original_ssh_client is not None:
                     original_ssh_client.close()
 
-
 def delete_chat_log_entry_by_timestamp(target_timestamp):
     updated_entries = []
     target_timestamp = float(target_timestamp)  # Convert target timestamp to float for comparison
@@ -339,8 +448,7 @@ def delete_chat_log_entry_by_timestamp(target_timestamp):
                 continue  # Skip lines that can't be decoded
     with open('chat_logs.jsonl', 'w') as file:
         file.writelines(updated_entries)
-
-def display_servers(servers, editing_index_key, section, delete_function, rerun_function):
+def display_servers(servers, editing_index_key, section, save_function, rerun_function):
     for i, server in enumerate(servers):
         st.write(f"Server {i+1}: {server['address']}")
         st.write(f"Username: {server['username']}")
@@ -348,27 +456,58 @@ def display_servers(servers, editing_index_key, section, delete_function, rerun_
         for command in server['commands']:
             st.text(command)
         with st.container():
-            col1, col2 = st.columns([1, 1])
+            col1, col2, col3 = st.columns([1, 1, 1])
             edit_button = col1.button("Edit", key=f"edit_{section}_{i}")
             delete_button = col2.button("Delete", key=f"delete_{section}_{i}")
-
-        if edit_button:
-            st.session_state[editing_index_key] = i
-            rerun_function()
-
-        if delete_button:
-            #'timestamp' is the key in your server dictionary that holds the timestamp
-            if 'timestamp' in server:
-                delete_chat_log_entry_by_timestamp(server['timestamp'])
-                st.success("Chat log entry deleted successfully.")
-            else:
-                st.error("No timestamp found for this server entry.")
             
-            del servers[i]
-            delete_function()
-            rerun_function()
+            # Handle edit button press
+            if edit_button:
+                # Safely retrieve the timestamp, providing a default if not found
+                current_editing_timestamp = server.get('timestamp', None)
+                # Update the session state to indicate which server is being edited
+                st.session_state[editing_index_key] = i
+                st.session_state['current_editing_timestamp'] = current_editing_timestamp
+                
+                rerun_function()  # Rerun the app to load the editing form
+            
+            # Handle delete button press separately
+            if delete_button:
+                delete_chat_log_entry_by_timestamp(server.get('timestamp', None))
+                save_function()
+                rerun_function()
         st.write("---")
- 
+
+
+def edit_entry_form():
+    if 'current_editing_timestamp' in st.session_state and st.session_state['current_editing_timestamp']:
+        with open('chat_logs.jsonl', 'r') as file:
+            for line in file:
+                entry = json.loads(line)
+                if entry.get('timestamp') == st.session_state['current_editing_timestamp']:
+                    # Populate the form with this entry's data for editing
+                    address = st.text_input("Address", value=entry.get('address', ''))
+                    # Continue for other fields...
+                    if st.form_submit_button("Save Edited Entry"):
+                        # Call function to save the edited entry
+                        save_edited_entry(entry)
+                        st.success("Entry updated successfully!")
+                        del st.session_state['current_editing_timestamp']  # Clear the editing state
+                        break
+
+def save_edited_entry(edited_entry):
+    updated_entries = []
+    with open('chat_logs.jsonl', 'r') as file:
+        for line in file:
+            entry = json.loads(line)
+            if entry.get('timestamp') != edited_entry.get('timestamp'):
+                updated_entries.append(line)
+            else:
+                updated_entries.append(json.dumps(edited_entry) + '\n')
+    
+    with open('chat_logs.jsonl', 'w') as file:
+        file.writelines(updated_entries)
+
+
 # call nvidia or openai api 
 def call_ai(ai_type, commands):
     with st.spinner('Waiting for AI response...'):
@@ -450,16 +589,19 @@ def markdown_file():
 
 
 # Main Application Logic
+
 def main():
     init_session_variables()
+    display_ui()
     load_config()
-    load_ai_config()
-    # config_ai_interface()
+    config_ai_interface()
     load_tests()
     ssh_conn_form()
     buttons()
     test_form()
     markdown_file()
+
+    app_process_data.main()
 
 if __name__ == "__main__":
     main()
