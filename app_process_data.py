@@ -68,11 +68,6 @@ def update_configuration(existing_config, chat_log_entries):
     existing_config['servers'] = updated_servers
     return existing_config
 
-# Modify update_configuration to insert data into SQLite database
-def update_configuration_db(conn, existing_config, chat_log_entries):
-    # please implement for inserting or updating servers and commands in the database
-
-    pass
 
 # Function to save the updated configuration to a file
 def save_updated_config(updated_config, updated_config_file_path):
