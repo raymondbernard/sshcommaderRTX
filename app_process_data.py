@@ -43,17 +43,19 @@ def create_server_config(commands=[], timestamp=""):
 # Process logs and avoid duplicates, including timestamps
 def process_logs(COMMAND_LOGS, config):
     seen_commands = set()
+    print("line 49 seen_commands = ", seen_commands)
     with open(COMMAND_LOGS, 'r') as file:
         for line in file:
             log_entry = json.loads(line)
+            print("line 50 log_entry = ", log_entry)
             response = log_entry['response'].strip()
             timestamp = log_entry.get('timestamp', "")  # Extract the timestamp
-            if response and response not in seen_commands:
+            if response and timestamp not in seen_commands:
                 commands = response.split('\n')
                 # Pass the timestamp to the server config
                 server_config = create_server_config(commands, timestamp)
                 config['servers'].append(server_config)
-                seen_commands.add(response)
+            seen_commands.add(response)
 
 
 # Extract system message
@@ -64,12 +66,12 @@ def system_message(file_path):
         for line in file:
             data = json.loads(line)
             response = data.get('response', '')
-            print("print 67 line repsone = ", response)
+            print("print 69 line repsone = ", response)
             match = re.search(r'```.*?```\s*(.+)', response, re.DOTALL)
-            print("line 69 system message  = ", match)
+            print("line 71 system message  = ", match)
             if match:
                 post_commands_texts.append(match.group(1).strip())
-                print("line 69 post system message = ", post_commands_texts)
+                print("line 74 post post commands texts = ", post_commands_texts)
     return post_commands_texts
 
 # Update config description
@@ -79,7 +81,7 @@ def update_config_description(CONFIG_JSON, extracted_texts):
     text_index = 0
     for server in config_data['servers']:
         if text_index < len(extracted_texts):
-            server['config_description'] = extracted_texts
+            server['config_description'] = extracted_texts[text_index]  # Corrected to assign a single item
             text_index += 1
     with open(CONFIG_JSON, 'w') as file:
         json.dump(config_data, file, indent=4)

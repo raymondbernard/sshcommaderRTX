@@ -1,1 +1,10 @@
-{"session_id": "e25fad1a-fbff-4556-af8c-3bb1b982bb66", "query": "Provide a list of commands to configure 16 switch ports start at 192.168.0.1/24?", "response": "To configure 16 switch ports starting at 192.168.0.1/24, you can use the following commands:\n```bash\n# Configure the first switch port\nnv set interface swp192s0 ip address 192.168.0.1/24\n\n# Configure the remaining 15 switch ports\nfor i in {2..16}; do\n    nv set interface swp192s$i ip address 192.168.0.$((i))/24\ndone\n```\nThis will configure 16 switch ports starting at 192.168.0.1/24 with unique IP addresses within the subnet.", "timestamp": 1709046655.0818853}
+{"session_id": "7c88733f-b967-40ef-b61e-875a3991eae0", "query": "query 1", "response": "pre text 1 ```command 1```\n system message 1", "timestamp": 1709046656.0818853}
+{"session_id": "2caba568-275c-4400-8caf-d1d0d974b1a0", "query": "query 2", "response": "pre text 2 ```command 2```\n system message 2", "timestamp": 1709046657.0818853}
+{"session_id": "2190a9b3-ad92-4eb6-9c2b-f79ef7ce6388", "query": "query 3", "response": "pre text 3 ```command 3```\n system message 3", "timestamp": 1709046658.0818853}
+{"session_id": "3ed3f8e0-86bc-4e1f-ac1f-5f2a2865cf68", "query": "query 4", "response": "pre text 4 ```command 4```\n system message 4", "timestamp": 1709046659.0818853}
+{"session_id": "c39b2dcf-fb7f-4017-b76a-5c471740a65a", "query": "query 5", "response": "pre text 5 ```command 5```\n system message 5", "timestamp": 1709046660.0818853}
+{"session_id": "9466afef-a277-46fe-8158-7da6d8fe33cb", "query": "query 6", "response": "pre text 6 ```command 6```\n system message 6", "timestamp": 1709046661.0818853}
+{"session_id": "44a0fd17-dec3-472e-bdce-c9bf08d0fee9", "query": "query 7", "response": "pre text 7 ```command 7```\n system message 7", "timestamp": 1709046662.0818853}
+{"session_id": "807a35c8-5566-4b38-80dd-a1d0371955fb", "query": "query 8", "response": "pre text 8 ```command 8```\n system message 8", "timestamp": 1709046663.0818853}
+{"session_id": "b96ddb9d-149b-4312-86bc-9ec1d40fc98c", "query": "query 9", "response": "pre text 9 ```command 9```\n system message 9", "timestamp": 1709046664.0818853}
+{"session_id": "55c8213a-e69b-4a17-b288-e3cdf088c115", "query": "query 10", "response": "pre text 10 ```command 10```\n system message 10", "timestamp": 1709046665.0818853}
