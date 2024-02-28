@@ -29,7 +29,7 @@ def process_chat_log():
 
 # Create server config
 # Create server config with a timestamp
-def create_server_config(commands=[], timestamp=""):
+def create_server_config(commands=[], -=""):
     return {
         "address": "",
         "username": "",
@@ -82,7 +82,7 @@ def update_config_description(CONFIG_JSON, extracted_texts):
 
 # Main Application Logic
 def main():
-    config = {"servers": [], "hostname": "worker07.air.nvidia.com", "port": 25374, "username": "ubuntu"}
+    config = {"servers": [], "hostname": "", "port": 25374, "username": "ubuntu"}
     process_chat_log()
     process_logs(COMMAND_LOGS, config)
     with open(CONFIG_JSON, 'w') as outfile:

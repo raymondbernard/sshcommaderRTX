@@ -7,6 +7,9 @@ import time
 import select 
 import os
 import app_process_data
+import os
+from datetime import datetime
+
 
 # Constants
 CONFIG_FILE = "config.json"
@@ -171,7 +174,6 @@ def save_json(filename, data):
     with open(filename, 'w') as f:
         json.dump(data, f, indent=4)
     st.success("Configuration saved successfully.")
-
 
 
 def config_ai_interface():
@@ -367,14 +369,19 @@ def save_tests():
 
 
 # Server Information Input
+
 def server_input_form(servers, editing_index, key, title, save_function):
     with st.form(key=key):
         st.subheader(title)
         editing_server = servers[editing_index] if editing_index is not None else {}
-        address = st.text_input("Address of server/device", value=editing_server.get("address", st.session_state.server_address)).strip()
-        server_username = st.text_input("Username", value=editing_server.get("username", st.session_state.server_username)).strip()
-        server_password = st.text_input("Password (optional)", type="password", value=editing_server.get("password", st.session_state.server_password)).strip()
-        commands = st.text_area("Commands (one perline)", value="\n".join(editing_server.get("commands", []))).strip()
+
+        # If editing, use the existing timestamp, otherwise generate a new one for new entries
+        current_timestamp = editing_server.get("timestamp", datetime.now().isoformat())
+        
+        address = st.text_input("Address of server/device", value=editing_server.get("address", "")).strip()
+        server_username = st.text_input("Username", value=editing_server.get("username", "")).strip()
+        server_password = st.text_input("Password (optional)", type="password", value=editing_server.get("password", "")).strip()
+        commands = st.text_area("Commands (one per line)", value="\n".join(editing_server.get("commands", []))).strip()
         submit_button = st.form_submit_button("Save configuration")
     
     if submit_button:
@@ -388,20 +395,57 @@ def server_input_form(servers, editing_index, key, title, save_function):
             "address": address,
             "username": server_username,
             "password": server_password,
-            "config_description": "",  # Initialize as empty
+            "timestamp": current_timestamp,  # Use the existing or new timestamp
+            "config_description": "",
             "commands": [cmd.strip() for cmd in commands.split('\n') if cmd.strip()]
         }
-
 
         # Save or update the server information
         if editing_index is not None:
             servers[editing_index] = server_info
-            ## Rewirte out to Chat_log
-            st.session_state.editing_index = None
         else:
             servers.append(server_info)
         save_function()
-        st.success("Server saved successfully!")
+        
+def server_input_form(servers, editing_index, key, title, save_function):
+    with st.form(key=key):
+        st.subheader(title)
+        editing_server = servers[editing_index] if editing_index is not None else {}
+        current_timestamp = datetime.now().timestamp()
+
+        # If editing, use the existing timestamp, otherwise generate a new one for new entries
+        # current_timestamp = editing_server.get("timestamp", datetime.now().isoformat())
+        print("line 417 current_timestamp", current_timestamp)
+        
+        address = st.text_input("Address of server/device", value=editing_server.get("address", "")).strip()
+        server_username = st.text_input("Username", value=editing_server.get("username", "")).strip()
+        server_password = st.text_input("Password (optional)", type="password", value=editing_server.get("password", "")).strip()
+        commands = st.text_area("Commands (one per line)", value="\n".join(editing_server.get("commands", []))).strip()
+        submit_button = st.form_submit_button("Save configuration")
+    
+    if submit_button:
+        # Update session state with the new values
+        st.session_state.server_address = address
+        st.session_state.server_username = server_username
+        st.session_state.server_password = server_password
+
+        # Gather server information
+        server_info = {
+            "address": address,
+            "username": server_username,
+            "password": server_password,
+            "timestamp": current_timestamp,  # Use the existing or new timestamp
+            "config_description": "",
+            "commands": [cmd.strip() for cmd in commands.split('\n') if cmd.strip()]
+        }
+
+        # Save or update the server information
+        if editing_index is not None:
+            servers[editing_index] = server_info
+        else:
+            servers.append(server_info)
+        save_function()
+        st.success("Server saved successfully")
 
 
 def buttons():
@@ -448,6 +492,7 @@ def delete_chat_log_entry_by_timestamp(target_timestamp):
                 continue  # Skip lines that can't be decoded
     with open('chat_logs.jsonl', 'w') as file:
         file.writelines(updated_entries)
+
 def display_servers(servers, editing_index_key, section, save_function, rerun_function):
     for i, server in enumerate(servers):
         st.write(f"Server {i+1}: {server['address']}")
@@ -601,7 +646,7 @@ def main():
     test_form()
     markdown_file()
 
-    app_process_data.main()
+    # app_process_data.main()
 
 if __name__ == "__main__":
     main()
