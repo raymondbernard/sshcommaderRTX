@@ -1,129 +1,16 @@
 {
     "servers": [
         {
-            "address": "asdfasdf",
-            "username": "asdfas",
-            "password": "asdfasfd",
-            "timestamp": 1709046656.0818853,
+            "address": "",
+            "username": "",
+            "password": "",
+            "timestamp": "",
             "config_description": [
-                "system message 1"
+                ""
       
             ],
             "commands": [
-                "command 1"
-            ]
-        },
-        {
-            "address": "data",
-            "username": "data",
-            "password": "asddfaff",
-            "timestamp": 1709046657.0818853,
-            "config_description": [
-                "system message 2"
-           
-            ],
-            "commands": [
-                "command 2"
-            ]
-        },
-        {
-            "address": "asdfas",
-            "username": "asdfsa",
-            "password": "",
-            "timestamp": 1709046658.0818853,
-            "config_description": [
-                "system message 3"
-         
-            ],
-            "commands": [
-                "command 3"
-            ]
-        },
-        {
-            "address": "",
-            "username": "",
-            "password": "",
-            "timestamp": 1709046659.0818853,
-            "config_description": [
-                "system message 4"
-            
-            ],
-            "commands": [
-                "command 4"
-            ]
-        },
-        {
-            "address": "",
-            "username": "",
-            "password": "",
-            "timestamp": 1709046660.0818853,
-            "config_description": [
-                "system message 5"
-                
-            ],
-            "commands": [
-                "command 5"
-            ]
-        },
-        {
-            "address": "",
-            "username": "",
-            "password": "",
-            "timestamp": 1709046661.0818853,
-            "config_description": [
-                "system message 6"
-            ],
-            "commands": [
-                "command 6"
-            ]
-        },
-        {
-            "address": "",
-            "username": "",
-            "password": "",
-            "timestamp": 1709046662.0818853,
-            "config_description": [
-                "system message 7"
-            ],
-            "commands": [
-                "command 7"
-            ]
-        },
-        {
-            "address": "",
-            "username": "",
-            "password": "",
-            "timestamp": 1709046663.0818853,
-            "config_description": [
-                "system message 8"
-            ],
-            "commands": [
-                "command 8"
-            ]
-        },
-        {
-            "address": "",
-            "username": "",
-            "password": "",
-            "timestamp": 1709046664.0818853,
-            "config_description": [
-                "system message 9"
-                
-            ],
-            "commands": [
-                "command 9"
-            ]
-        },
-        {
-            "address": "",
-            "username": "",
-            "password": "",
-            "timestamp": 1709046665.0818853,
-            "config_description": [
-                "system message 10"
-            ],
-            "commands": [
-                "command 10"
+                ""
             ]
         }
     ],

@@ -1,10 +1,3 @@
-{"session_id": "7c88733f-b967-40ef-b61e-875a3991eae0", "query": "query 1", "response": "command 1", "timestamp": 1709046656.0818853}
-{"session_id": "2caba568-275c-4400-8caf-d1d0d974b1a0", "query": "query 2", "response": "command 2", "timestamp": 1709046657.0818853}
-{"session_id": "2190a9b3-ad92-4eb6-9c2b-f79ef7ce6388", "query": "query 3", "response": "command 3", "timestamp": 1709046658.0818853}
-{"session_id": "3ed3f8e0-86bc-4e1f-ac1f-5f2a2865cf68", "query": "query 4", "response": "command 4", "timestamp": 1709046659.0818853}
-{"session_id": "c39b2dcf-fb7f-4017-b76a-5c471740a65a", "query": "query 5", "response": "command 5", "timestamp": 1709046660.0818853}
-{"session_id": "9466afef-a277-46fe-8158-7da6d8fe33cb", "query": "query 6", "response": "command 6", "timestamp": 1709046661.0818853}
-{"session_id": "44a0fd17-dec3-472e-bdce-c9bf08d0fee9", "query": "query 7", "response": "command 7", "timestamp": 1709046662.0818853}
-{"session_id": "807a35c8-5566-4b38-80dd-a1d0371955fb", "query": "query 8", "response": "command 8", "timestamp": 1709046663.0818853}
-{"session_id": "b96ddb9d-149b-4312-86bc-9ec1d40fc98c", "query": "query 9", "response": "command 9", "timestamp": 1709046664.0818853}
-{"session_id": "55c8213a-e69b-4a17-b288-e3cdf088c115", "query": "query 10", "response": "command 10", "timestamp": 1709046665.0818853}
+{"session_id": "7c88733f-b967-40ef-b61e-875a3991eae0", "query": "query 1", "response": "command 1", "system_message": "message 1", "timestamp": 1709046656.0818853}
+{"session_id": "2caba568-275c-4400-8caf-d1d0d974b1a0", "query": "query 2", "response": "command 2", "system_message": "message 2", "timestamp": 1709046657.0818853}
+{"session_id": "2190a9b3-ad92-4eb6-9c2b-f79ef7ce6388", "query": "query 3", "response": "command 3", "system message": "message 3", "timestamp": 1709046658.0818853}

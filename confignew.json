@@ -4,7 +4,7 @@
             "address": "",
             "username": "",
             "password": "",
-            "timestamp":  1709046656.0818853,
+            "timestamp": 1709046656.0818853,
             "config_description": "system message 1",
             "commands": [
                 "command 1"
@@ -30,7 +30,6 @@
                 "command 3"
             ]
         }
-       
     ],
     "hostname": "",
     "port": 22,
