@@ -13,6 +13,24 @@ COMMAND_LOGS = os.path.join(local_app_data, "NVIDIA", "ChatWithRTX", "RAG", "trt
 CHAT_LOGS = os.path.join(local_app_data, "NVIDIA", "ChatWithRTX", "RAG", "trt-llm-rag-windows-main", "chat_logs.jsonl")
 CONFIG_JSON = os.path.join(local_app_data, "NVIDIA", "ChatWithRTX", "RAG", "trt-llm-rag-windows-main", "config.json")
 
+# Load and preserve existing config
+def load_existing_config():
+    try:
+        with open(CONFIG_JSON, 'r') as file:
+            return json.load(file)
+    except FileNotFoundError:
+        return {"servers": []}
+
+# Check and update server config
+def check_and_update_server_config(existing_config, new_server):
+    existing_server = next((server for server in existing_config['servers'] if server['timestamp'] == new_server['timestamp']), None)
+    if existing_server:
+        for field in ['address', 'username', 'password']:
+            if new_server[field]:  # Only update if new_server has a non-empty value for the field
+                existing_server[field] = new_server[field]
+    else:
+        existing_config['servers'].append(new_server)
+
 # Process response
 def process_response(response):
     pattern = r'```(.*?)```'
@@ -28,50 +46,42 @@ def process_chat_log():
             output_file.write(json.dumps(data) + '\n')
 
 # Create server config
-# Create server config with a timestamp
 def create_server_config(commands=[], timestamp=""):
     return {
         "address": "",
         "username": "",
         "password": "",
-        "timestamp": timestamp,  # Include the timestamp
+        "timestamp": timestamp,
         "config_description": "",
         "commands": commands
     }
 
-
 # Process logs and avoid duplicates, including timestamps
 def process_logs(COMMAND_LOGS, config):
     seen_commands = set()
-    print("line 49 seen_commands = ", seen_commands)
+    existing_config = load_existing_config()
     with open(COMMAND_LOGS, 'r') as file:
         for line in file:
             log_entry = json.loads(line)
-            print("line 50 log_entry = ", log_entry)
             response = log_entry['response'].strip()
-            timestamp = log_entry.get('timestamp', "")  # Extract the timestamp
+            timestamp = log_entry.get('timestamp', "")
             if response and timestamp not in seen_commands:
                 commands = response.split('\n')
-                # Pass the timestamp to the server config
                 server_config = create_server_config(commands, timestamp)
-                config['servers'].append(server_config)
+                check_and_update_server_config(existing_config, server_config)
             seen_commands.add(response)
-
+    return existing_config
 
 # Extract system message
 def system_message(file_path):
-    print("line 61 chat longs =", file_path)
     post_commands_texts = []
     with open(file_path, 'r') as file:
         for line in file:
             data = json.loads(line)
             response = data.get('response', '')
-            print("print 69 line repsone = ", response)
             match = re.search(r'```.*?```\s*(.+)', response, re.DOTALL)
-            print("line 71 system message  = ", match)
             if match:
                 post_commands_texts.append(match.group(1).strip())
-                print("line 74 post post commands texts = ", post_commands_texts)
     return post_commands_texts
 
 # Update config description
@@ -81,23 +91,24 @@ def update_config_description(CONFIG_JSON, extracted_texts):
     text_index = 0
     for server in config_data['servers']:
         if text_index < len(extracted_texts):
-            server['config_description'] = extracted_texts[text_index]  # Corrected to assign a single item
+            server['config_description'] = extracted_texts[text_index]
             text_index += 1
     with open(CONFIG_JSON, 'w') as file:
         json.dump(config_data, file, indent=4)
 
 # Main Application Logic
 def main():
-    config = {"servers": [], "hostname": "", "port": 25374, "username": "ubuntu"}
+    config = load_existing_config()  # Load existing config to preserve fields
     process_chat_log()
-    process_logs(COMMAND_LOGS, config)
-    with open(CONFIG_JSON, 'w') as outfile:
-        json.dump(config, outfile, indent=4)
-    print("line 92 chat logs = ", CHAT_LOGS)
+    updated_config = process_logs(COMMAND_LOGS, config)  # Process logs and update config with preservation
 
     extracted_texts = system_message(CHAT_LOGS)
-    print("line 93 extracted_text = ", extracted_texts)
     update_config_description(CONFIG_JSON, extracted_texts)
+
+    # Save the updated config back to CONFIG_JSON
+    with open(CONFIG_JSON, 'w') as outfile:
+        json.dump(updated_config, outfile, indent=4)
+
     logging.info("Configuration processing complete.")
 
 if __name__ == "__main__":

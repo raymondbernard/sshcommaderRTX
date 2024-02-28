@@ -28,48 +28,48 @@ DEFAULT_SYSTEM_MESSAGE  = "Note we are using Nvidia's cumulus Linux distribution
 chat_log_file_path = 'chat_logs.jsonl'
 config_file_path = 'config.json'
 
-# Read chat log entries
-chat_logs = []
+# # Read chat log entries
+# chat_logs = []
 
-# Read chat log entries
-chat_logs = []
-with open(chat_log_file_path, 'r') as file:
-    for line in file:
-        chat_logs.append(json.loads(line))
+# # Read chat log entries
+# chat_logs = []
+# with open(chat_log_file_path, 'r') as file:
+#     for line in file:
+#         chat_logs.append(json.loads(line))
 
-# Load existing configuration
-with open(config_file_path, 'r') as file:
-    config = json.load(file)
+# # Load existing configuration
+# with open(config_file_path, 'r') as file:
+#     config = json.load(file)
 
 # Helper function to check if the timestamp is unique
-def is_timestamp_unique(servers, timestamp):
-    return all(server.get("timestamp", "") != timestamp for server in servers)
+# def is_timestamp_unique(servers, timestamp):
+#     return all(server.get("timestamp", "") != timestamp for server in servers)
 
 
-# Process and update configuration with chat log entries
-for entry in chat_logs:
-    timestamp = str(entry["timestamp"])
-    if is_timestamp_unique(config["servers"], timestamp):
-        new_server_config = {
-            "address": "",  # Determine how to handle this
-            "username": "",  # Determine how to handle this
-            "password": "",  # Determine how to handle this
-            "timestamp": timestamp,
-            "config_description": entry["response"],
-            "commands": entry["response"].split('\n')  # Adjust as necessary
-        }
-        # Add the new server configuration to the list of servers
-        config["servers"].append(new_server_config)
-    else:
-        print(f"Skipping duplicate timestamp: {timestamp}")
+# # Process and update configuration with chat log entries
+# for entry in chat_logs:
+#     timestamp = str(entry["timestamp"])
+#     if is_timestamp_unique(config["servers"], timestamp):
+#         new_server_config = {
+#             "address": "",  # Determine how to handle this
+#             "username": "",  # Determine how to handle this
+#             "password": "",  # Determine how to handle this
+#             "timestamp": timestamp,
+#             "config_description": entry["response"],
+#             "commands": entry["response"].split('\n')  # Adjust as necessary
+#         }
+#         # Add the new server configuration to the list of servers
+#         config["servers"].append(new_server_config)
+#     else:
+#         print(f"Skipping duplicate timestamp: {timestamp}")
 
-# Save the updated configuration
-with open(config_file_path, 'w') as file:
-    json.dump(config, file, indent=4)
+# # Save the updated configuration
+# with open(config_file_path, 'w') as file:
+#     json.dump(config, file, indent=4)
 
-# Save the updated configuration
-with open(config_file_path, 'w') as file:
-    json.dump(config, file, indent=4)
+# # Save the updated configuration
+# with open(config_file_path, 'w') as file:
+#     json.dump(config, file, indent=4)
 
 # Display the logo in the first column
 def display_ui():

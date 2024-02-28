@@ -1,19 +1,19 @@
 {
     "servers": [
         {
-            "address": "",
-            "username": "",
-            "password": "",
-            "timestamp": 1709046656.0818853,
-            "config_description": "system message 1",
+            "address": "cosmic ray",
+            "username": "cosmic",
+            "password": "sadf",
+            "timestamp": 1709140277.645962,
+            "config_description": "",
             "commands": [
-                "command 1"
+                "cosmic command 1"
             ]
         },
         {
-            "address": "",
-            "username": "",
-            "password": "",
+            "address": "asdf",
+            "username": "sadf",
+            "password": "asdf",
             "timestamp": 1709046657.0818853,
             "config_description": "system message 2",
             "commands": [
@@ -98,6 +98,16 @@
             "config_description": "system message 10",
             "commands": [
                 "command 10"
+            ]
+        },
+        {
+            "address": "",
+            "username": "",
+            "password": "",
+            "timestamp": 1709046656.0818853,
+            "config_description": "",
+            "commands": [
+                "command 1"
             ]
         }
     ],

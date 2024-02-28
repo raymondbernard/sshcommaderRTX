@@ -1,9 +1,9 @@
 {
     "servers": [
         {
-            "address": "",
-            "username": "",
-            "password": "",
+            "address": "asdfasdf",
+            "username": "asdfas",
+            "password": "asdfasfd",
             "timestamp": 1709046656.0818853,
             "config_description": [
                 "system message 1"
@@ -14,9 +14,9 @@
             ]
         },
         {
-            "address": "",
-            "username": "",
-            "password": "",
+            "address": "data",
+            "username": "data",
+            "password": "asddfaff",
             "timestamp": 1709046657.0818853,
             "config_description": [
                 "system message 2"
@@ -27,8 +27,8 @@
             ]
         },
         {
-            "address": "",
-            "username": "",
+            "address": "asdfas",
+            "username": "asdfsa",
             "password": "",
             "timestamp": 1709046658.0818853,
             "config_description": [
