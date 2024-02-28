@@ -51,21 +51,25 @@ def process_logs(COMMAND_LOGS, config):
             if response and response not in seen_commands:
                 commands = response.split('\n')
                 # Pass the timestamp to the server config
-                server_config = create_server_config(commands, str(timestamp))
+                server_config = create_server_config(commands, timestamp)
                 config['servers'].append(server_config)
                 seen_commands.add(response)
 
 
 # Extract system message
 def system_message(file_path):
+    print("line 61 chat longs =", file_path)
     post_commands_texts = []
     with open(file_path, 'r') as file:
         for line in file:
             data = json.loads(line)
             response = data.get('response', '')
-            match = re.search(r'```\n.*?\n```\n(.+)', response, re.DOTALL)
+            print("print 67 line repsone = ", response)
+            match = re.search(r'```.*?```\s*(.+)', response, re.DOTALL)
+            print("line 69 system message  = ", match)
             if match:
                 post_commands_texts.append(match.group(1).strip())
+                print("line 69 post system message = ", post_commands_texts)
     return post_commands_texts
 
 # Update config description
@@ -75,7 +79,7 @@ def update_config_description(CONFIG_JSON, extracted_texts):
     text_index = 0
     for server in config_data['servers']:
         if text_index < len(extracted_texts):
-            server['config_description'] = extracted_texts[text_index]
+            server['config_description'] = extracted_texts
             text_index += 1
     with open(CONFIG_JSON, 'w') as file:
         json.dump(config_data, file, indent=4)
@@ -87,7 +91,10 @@ def main():
     process_logs(COMMAND_LOGS, config)
     with open(CONFIG_JSON, 'w') as outfile:
         json.dump(config, outfile, indent=4)
+    print("line 92 chat logs = ", CHAT_LOGS)
+
     extracted_texts = system_message(CHAT_LOGS)
+    print("line 93 extracted_text = ", extracted_texts)
     update_config_description(CONFIG_JSON, extracted_texts)
     logging.info("Configuration processing complete.")
 

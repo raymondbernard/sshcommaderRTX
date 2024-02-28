@@ -479,19 +479,41 @@ def buttons():
                 if 'original_ssh_client' in locals() and original_ssh_client is not None:
                     original_ssh_client.close()
 
-def delete_chat_log_entry_by_timestamp(target_timestamp):
-    updated_entries = []
+
+def delete_server_entry_by_timestamp(target_timestamp):
     target_timestamp = float(target_timestamp)  # Convert target timestamp to float for comparison
-    with open('chat_logs.jsonl', 'r') as file:
-        for line in file:
-            try:
-                entry = json.loads(line)
-                if entry.get('timestamp', 0.0) != target_timestamp:
-                    updated_entries.append(line)
-            except json.JSONDecodeError:
-                continue  # Skip lines that can't be decoded
-    with open('chat_logs.jsonl', 'w') as file:
-        file.writelines(updated_entries)
+    print(f"Target timestamp to delete: {target_timestamp}")
+    target_timestamp_str = str(target_timestamp)
+
+    # Assuming server entries in the session state can be identified by a specific pattern or key structure
+    keys_to_delete = [key for key in st.session_state.keys() if target_timestamp_str in key]
+    print(" 490 session state == ", st.session_state)
+    for key in keys_to_delete:
+        del st.session_state[key]
+
+    if keys_to_delete:
+        return True  # Indicates that a deletion occurred in session state
+    print(" 496 after delete session state == ", st.session_state)
+
+    with open(CONFIG_JSON, 'r') as file:
+        config = json.load(file)
+    
+    # Convert and compare timestamps as floats
+    updated_servers = [
+        server for server in config['servers']
+        if float(server.get('timestamp', 0)) != target_timestamp
+    ]
+    
+    if len(config['servers']) == len(updated_servers):
+        print("No matching timestamp found to delete.")
+    else:
+        config['servers'] = updated_servers
+        
+        with open(CONFIG_JSON, 'w') as file:
+            json.dump(config, file, indent=4, ensure_ascii=False)
+        
+        print("Server entry deleted successfully.")
+    
 
 def display_servers(servers, editing_index_key, section, save_function, rerun_function):
     for i, server in enumerate(servers):
@@ -517,9 +539,9 @@ def display_servers(servers, editing_index_key, section, save_function, rerun_fu
             
             # Handle delete button press separately
             if delete_button:
-                delete_chat_log_entry_by_timestamp(server.get('timestamp', None))
+                delete_server_entry_by_timestamp(server.get('timestamp', None))
                 save_function()
-                rerun_function()
+                # rerun_function()
         st.write("---")
 
 
