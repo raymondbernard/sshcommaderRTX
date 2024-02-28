@@ -29,7 +29,7 @@ def process_chat_log():
 
 # Create server config
 # Create server config with a timestamp
-def create_server_config(commands=[], -=""):
+def create_server_config(commands=[], timestamp=""):
     return {
         "address": "",
         "username": "",
