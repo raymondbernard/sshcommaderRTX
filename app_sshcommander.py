@@ -40,27 +40,49 @@ updated_config_file_path = NEW_CONFIG_JSON
 
 def load_servers_from_db(conn):
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM servers")
+    # Modified SQL query to include ROW_NUMBER
+    cursor.execute("""
+        SELECT 
+            ROW_NUMBER() OVER (ORDER BY id) AS row_num,
+            id,
+            session_id,
+            query,
+            address,
+            username,
+            password,
+            timestamp,
+            config_description,
+            commands
+        FROM servers
+    """)
     servers = cursor.fetchall()
     servers_list = []
+    print("line 60 server_list = ", servers_list)
 
-    # Refactored loop to populate servers_list with server details
+    # Refactored loop to populate servers_list with server details, including row number
     for server in servers:
         server_dict = {
-            'id': server[0],
-            'session_id':server[1],
-            'query': server[2],
-            'user': server[3],
-            'account': server[4],
-            # 'timestamp': server[5],  # Assuming index 3 for timestamp, adjust as necessary
-            'timestamp': server[6],    # Adjust index as necessary
-            'config_description': server[7],  # Adjust index as necessary
-            'commands': server[8]    # Adjust index as necessary
+            'row_num': server[0],  # Added row_num based on the adjusted query
+            'id': server[1],
+            'session_id': server[2],
+            'query': server[3],
+            'address': server[4],
+            'username': server[5],
+            'password': server[6],
+            'timestamp': server[7],
+            'config_description': server[8],
+            'commands': server[9]
         }
         servers_list.append(server_dict)
-    print("line 61 server_list")
+    print("line 61 server_list", servers_list)
     # Update session_state with servers_list
     st.session_state['servers'] = servers_list
+    st.write("After init:", st.session_state.servers)
+    cursor.close()
+    conn.close()
+
+    
+    
 
 
 # Function to connect to the SQLite database
@@ -328,30 +350,37 @@ def save_server_to_db(servers):
             print(f"Error: Invalid server data format or missing 'commands' key: {server}")
             continue
         id += 1
+        print("LOOPS !!!!! == ", id )
         # Assuming 'commands' is a list and needs to be serialized
         commands_json = json.dumps(server['commands']) if isinstance(server['commands'], list) else server['commands']
         address_value = server.get('address', 'default_value_if_missing')
         username_value = server.get('username', 'default_value_if_missing')
         password_value = server.get('password', 'default_value_if_missing')
         # config_description = server.get('password', 'default_value_if_missing')
+        newid = server.get('row_num')
+        print("line 360 serverid == ", server.get('id',))
+        print("line 361 newid row num  == ", server.get('row_num',))
+        print("line 362 newid   == ", newid)
+        # if not newid:
+        #     newid = 1 
+        # print("line 365 server id" , server['id'])
+        print("line 366 newid == ", newid)
+        print("line 367  commands json  id = ", id, commands_json)
+    
 
-        print("line 336  commands json  id = ", id, commands_json)
-
-        print("line 339 config description = ", server.get('config_description', ''))
-       
         try:
             cursor.execute("""
                 UPDATE servers SET address = ?, username = ?, password = ?, commands = ?
                 WHERE id = ?""",
-                (address_value, username_value,password_value, commands_json, id ))
+                (address_value, username_value, password_value, commands_json, id))
             print(f"Updated server with id {server['id']}")
         except Exception as e:
-            print(f"An error occurred while updating: {e}")
-    
+            continue
+            # print(f"An error occurred while updating: {e}")
+
 
     conn.commit()
     cursor.close()
-
 
 
 # Save tests
@@ -364,44 +393,6 @@ def save_tests():
 
 
 # Server Information Input
-
-def server_input_form(servers, editing_index, key, title, save_function):
-    with st.form(key=key):
-        st.subheader(title)
-        editing_server = servers[editing_index] if editing_index is not None else {}
-
-        # If editing, use the existing timestamp, otherwise generate a new one for new entries
-        current_timestamp = editing_server.get("timestamp", datetime.now().isoformat())
-        
-        address = st.text_input("Address of server/device", value=editing_server.get("address", "")).strip()
-        server_username = st.text_input("Username", value=editing_server.get("username", "")).strip()
-        server_password = st.text_input("Password (optional)", type="password", value=editing_server.get("password", "")).strip()
-        commands = st.text_area("Commands (one per line)", value="\n".join(editing_server.get("commands", []))).strip()
-        submit_button = st.form_submit_button("Save configuration")
-    
-    if submit_button:
-        # Update session state with the new values
-        st.session_state.server_address = address
-        st.session_state.server_username = server_username
-        st.session_state.server_password = server_password
-
-        # Gather server information
-        server_info = {
-            "address": address,
-            "username": server_username,
-            "password": server_password,
-            "timestamp": current_timestamp,  # Use the existing or new timestamp
-            "config_description": "",
-            "commands": [cmd.strip() for cmd in commands.split('\n') if cmd.strip()]
-        }
-
-        # Save or update the server information
-        if editing_index is not None:
-            servers[editing_index] = server_info
-        else:
-            servers.append(server_info)
-        print("line 376 =", servers)
-        save_server_to_db(servers)
         
 def server_input_form(servers, editing_index, key, title,  save_server_to_db):
     with st.form(key=key):
@@ -479,8 +470,52 @@ def buttons():
                 if 'original_ssh_client' in locals() and original_ssh_client is not None:
                     original_ssh_client.close()
 
+
+
+def refactordb():
+
+    # Connect to your SQLite database
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+
+
+    # Step 1: Create a temporary table to store the current data
+    cursor.execute("""CREATE TEMPORARY TABLE tmp_servers AS SELECT * FROM servers;""")
+
+    # Step 2: Drop the original 'servers' table
+    cursor.execute("""DROP TABLE servers;""")
+
+    # Step 3: Recreate the 'servers' table with the updated structure, including all specified columns
+    cursor.execute("""
+    CREATE TABLE "servers" (
+        "id"    INTEGER PRIMARY KEY AUTOINCREMENT,
+        "session_id" TEXT NOT NULL,
+        "query" TEXT NOT NULL,
+        "address"   TEXT NOT NULL,
+        "username"  TEXT NOT NULL,
+        "password"  TEXT NOT NULL,
+        "timestamp" REAL NOT NULL UNIQUE,
+        "config_description" TEXT NOT NULL,
+        "commands"  TEXT
+    );
+    """)
+
+    # Step 4: Copy data from the temporary table to the 'servers' table with new primary keys
+    # Ensure all columns including 'query' are correctly listed in both the INSERT INTO and SELECT parts
+    cursor.execute("""
+    INSERT INTO servers (session_id, query, address, username, password, timestamp, config_description, commands)
+    SELECT session_id, query, address, username, password, timestamp, config_description, commands FROM tmp_servers;
+    """)
+
+    # Step 5: Drop the temporary table
+    cursor.execute("""DROP TABLE tmp_servers;""")
+
+    # Commit changes and close connection
+    conn.commit()
+    conn.close()
+
+
 def delete_server_from_db(server):
-    st.write("Before deletion:", st.session_state.servers)
 
     server_id = server['id']  # Correctly capture the server's ID
     conn = connect_database(DATABASE_PATH)
@@ -489,16 +524,22 @@ def delete_server_from_db(server):
     conn.commit()
     cursor.close()
     conn.close()
+    refactordb()
 
-    # Correctly filter out the deleted server from session state
-    st.session_state.servers = [s for s in st.session_state.servers if s['id'] != server_id]
+    # Filter out the deleted server from session state
+    updated_servers = [s for s in st.session_state.servers if s['id'] != server_id]
 
-    st.write("After deletion:", st.session_state.servers)
+    # Optionally, reassign row numbers for display purposes
+    for i, server in enumerate(updated_servers, start=1):
+        server['row_num'] = i  # Assign new row numbers starting from 1
 
-def display_servers(servers, editing_index_key, section, delete_function, rerun_function):
+    st.session_state.servers = updated_servers
+
+
+def display_servers(servers, editing_index_key, section, delete_server_from_db, rerun_function):
     for i, server in enumerate(servers):
-        # st.write(f"Server {i+1}: {server['address']}")
-        # st.write(f"Username: {server['username']}")
+        st.write(f"Server {i+1}: {server['address']}")
+        st.write(f"Username: {server['username']}")
         st.write("Commands:")
        
         st.text(server['commands'])
@@ -515,23 +556,14 @@ def display_servers(servers, editing_index_key, section, delete_function, rerun_
                 st.session_state[editing_index_key] = i
                 
                 rerun_function()  # Rerun the app to load the editing form
-            
+                st.session_state.clear()
+
             # Handle delete button press separately
             if delete_button:
-                # print("line 464 session editing_index =",  st.session_state.id)
-                # print("line 467 session editing_index =",  st.session_state)
-                # del st.session_state['']
-                # # delete_server_entry_by_timestamp(server.get('timestamp', None))
-
-                # delete_server_from_db(st.session_state.editing_index)
-                # rerun_function()
-
+    
                 print("line 522 servers == ", server)
                 print("line 523 server id = ", server['id'])
                 print("line 534, = ",servers[i])
-                # del servers[i]
-                # delete_function()
-
                 delete_server_from_db(server)
                 st.session_state.clear()
 
@@ -547,35 +579,6 @@ def call_ai(ai_type, commands):
         return call_nvidia(commands)
     
 
-def test_form():
-    # Testing Section
-    with st.expander("Setup Testing"):
-
-        server_input_form(st.session_state.tests, st.session_state.editing_test_index, 'test_form', "Configure a Test", save_tests)
-    with st.expander("View saved Tests and or  Edit / Delete"):
-        display_servers(st.session_state.tests, 'editing_test_index', 'test', save_tests, st.rerun)
-        
-    # Action Button for Testing
-    if st.button("Start Testing"):
-        with st.spinner("Testing devices..."):
-            try:
-                # Create SSH client to the original server
-                original_ssh_client = create_ssh_client(st.session_state.hostname, st.session_state.port, st.session_state.username, st.session_state.password, st.session_state.key_filename_path)
-
-                if original_ssh_client is None:
-                    st.error("Failed to create SSH client to the original server.")
-                    st.stop()
-                # Run commands on each server through the original server
-                for test in st.session_state.tests:
-                    st.write(f"Testing {test['address']} through {st.session_state.hostname}...")
-                    run_commands(original_ssh_client, test)
-                st.success("Testing completed successfully!")
-            except Exception as e:
-                st.error(f"An error occurred: {e}")
-            finally:
-                if 'original_ssh_client' in locals() and original_ssh_client is not None:
-                    original_ssh_client.close()
-
 # read the config.json file for markdown conversion       
 def read_json(file_path):
     with open(file_path, 'r') as file:
@@ -584,20 +587,24 @@ def read_json(file_path):
 # process config to markdown 
 def display_servers_as_markdown(servers):
     markdown_text = ""
-    if servers:
-        for server in servers['servers']:  # Assuming 'servers' is the top-level key
-            markdown_text += f"### Device Address: {server['address']}\n"
-            markdown_text += f"**Username:** {server['username']}\n"
-            # markdown_text += f"**Password:** {server['password']}\n"
-            markdown_text += f"\n**Description:**\n{server['config_description']}\n\n"
-            markdown_text += "**Commands:**\n"
-            for command in server['commands']:
-                markdown_text += f"- {command}\n"
-            markdown_text += "\n---\n\n"  # Separator between servers
-        return markdown_text
-    elif servers == None: 
-        st.write("please configure your devices and servers")
+    print("590 servers markdown === ", servers)
+    if servers and 'servers' in servers:
+        for server in servers['servers']:
+            # Adding server details and description
+            markdown_text += f"## Server ID: {server['id']}\n\n"
+            markdown_text += f"**Session ID:** `{server['session_id']}`\n\n"
+            markdown_text += f"**Query:** {server['query']}\n\n"
+            markdown_text += f"**Configuration Note:**\n\n> {server['config_description']}\n\n"
+            markdown_text += "**Commands:**\n\n```bash\n"
+            
+            # Assuming commands are stored as a single string with newline characters
+            markdown_text += f"{server['commands']}\n```\n\n"
+            
+            markdown_text += "---\n\n"  # Separator between server configurations
+    else:
+        markdown_text += "No servers configured.\n"
 
+    return markdown_text
 # create a markdown of the contents of the config.json file
 def markdown_file():
     st.sidebar.button('Read Config', on_click=lambda: st.session_state.update({'read_config': True}))
@@ -634,7 +641,6 @@ def main():
     load_tests()
     ssh_conn_form()
     buttons()
-    test_form()
     markdown_file()
     close_database_connection(conn)
     # app_process_data.main()
