@@ -48,15 +48,17 @@ def load_servers_from_db(conn):
     for server in servers:
         server_dict = {
             'id': server[0],
-            'user': server[1],
-            'account': server[2],
-            'timestamp': server[3],  # Assuming index 3 for timestamp, adjust as necessary
-            'comment': server[4],    # Adjust index as necessary
-            'description': server[5],  # Adjust index as necessary
-            'commands': server[6]    # Adjust index as necessary
+            'session_id':server[1],
+            'query': server[2],
+            'user': server[3],
+            'account': server[4],
+            'timestamp': server[5],  # Assuming index 3 for timestamp, adjust as necessary
+            'comment': server[6],    # Adjust index as necessary
+            'config_description': server[7],  # Adjust index as necessary
+            'commands': server[8]    # Adjust index as necessary
         }
         servers_list.append(server_dict)
-
+    print("line 61 server_list")
     # Update session_state with servers_list
     st.session_state['servers'] = servers_list
 
@@ -65,22 +67,22 @@ def load_servers_from_db(conn):
 def connect_database(db_path):
     return sqlite3.connect(db_path)
 
-    # Display server commands if servers exist in session_state
-    if 'servers' in st.session_state:
-        for server in st.session_state['servers']:
-            st.text(server['commands'])
+# # Display server commands if servers exist in session_state
+# if 'servers' in st.session_state:
+#     for server in st.session_state['servers']:
+#         st.text(server['commands'])
 
-            # Example usage
-            conn = connect_database(DATABASE_PATH)
-            load_servers_from_db(conn)
-                # After the loop, assign servers_list to the Streamlit session state
-            st.session_state.servers = servers_list
+#         # Example usage
+#         conn = connect_database(DATABASE_PATH)
+#         load_servers_from_db(conn)
+#             # After the loop, assign servers_list to the Streamlit session state
+#         st.session_state.servers = servers_list
 
-    # Optional: Print the servers list to the console for debugging purposes
-    print(servers_list)
+# # Optional: Print the servers list to the console for debugging purposes
+# print(servers_list)
 
 
-# def save_server_to_db(server):
+# def save_server_to_db(conn,server):
 #     cursor = conn.cursor()
 #     # Convert commands list to JSON string for storage
 #     commands_json = json.dumps(server['commands'])
@@ -317,35 +319,40 @@ def save_config():
     with open(CONFIG_FILE, "w") as f:
         json.dump(data, f)
 
-
 def save_server_to_db(servers):
     conn = connect_database(DATABASE_PATH)
     cursor = conn.cursor()
-    
+    id = 0
     for server in servers:
-        commands_json = json.dumps(server.get('commands', []))
-        # Check if 'id' key is present in the server dictionary
-        if 'id' in server:
-            try:
-                # Perform an update using the 'id' as the identifier
-                cursor.execute("""
-                    UPDATE servers SET address = ?, username = ?, password = ?, timestamp = ?, config_description = ?, commands = ?
-                    WHERE id = ?""", 
-                    (server['address'], server['username'], server['password'], server['timestamp'], server.get('config_description', ''), commands_json, server['id']))
-            except Exception as e:
-                print(f"An error occurred while updating: {e}")
-        else:
-            try:
-                # Insert a new record if no 'id' is present
-                cursor.execute("""
-                    INSERT INTO servers (address, username, password, timestamp, config_description, commands)
-                    VALUES (?, ?, ?, ?, ?, ?)""", 
-                    (server['address'], server['username'], server['password'], server['timestamp'], server.get('config_description', ''), commands_json))
-            except Exception as e:
-                print(f"An error occurred while inserting: {e}")
-                
-    conn.commit()  # Commit changes after processing all servers
-    cursor.close()  # Close the cursor when done
+        if not isinstance(server, dict) or 'commands' not in server:
+            print(f"Error: Invalid server data format or missing 'commands' key: {server}")
+            continue
+        id += 1
+        # Assuming 'commands' is a list and needs to be serialized
+        commands_json = json.dumps(server['commands']) if isinstance(server['commands'], list) else server['commands']
+        address_value = server.get('address', 'default_value_if_missing')
+        username_value = server.get('username', 'default_value_if_missing')
+        password_value = server.get('password', 'default_value_if_missing')
+        # config_description = server.get('password', 'default_value_if_missing')
+
+        print("line 336  commands json  id = ", id, commands_json)
+
+        print("line 339 config description = ", server.get('config_description', ''))
+       
+        try:
+            cursor.execute("""
+                UPDATE servers SET address = ?, username = ?, password = ?, commands = ?
+                WHERE id = ?""",
+                (address_value, username_value,password_value, commands_json, id ))
+            print(f"Updated server with id {server['id']}")
+        except Exception as e:
+            print(f"An error occurred while updating: {e}")
+    
+
+    conn.commit()
+    cursor.close()
+
+
 
 
 def delete_server_from_db(server_id):
@@ -416,7 +423,9 @@ def server_input_form(servers, editing_index, key, title, save_function):
         address = st.text_input("Address of server/device", value=editing_server.get("address", "")).strip()
         server_username = st.text_input("Username", value=editing_server.get("username", "")).strip()
         server_password = st.text_input("Password (optional)", type="password", value=editing_server.get("password", "")).strip()
-        commands = st.text_area("Commands (one per line)", value="\n".join(editing_server.get("commands", []))).strip()
+
+        commands = st.text_area("Commands (one per line)", value="".join(editing_server.get("commands", ""))).strip()
+        save_server_to_db(servers)
         submit_button = st.form_submit_button("Save configuration")
     
     if submit_button:
@@ -448,7 +457,7 @@ def server_input_form(servers, editing_index, key, title, save_function):
 
 def buttons():
     with st.expander("View Saved Configurations and or Edit/Delete"):
-        display_servers(st.session_state.servers, 'editing_index', 'config', save_config, st.experimental_rerun)
+        display_servers(st.session_state.servers, 'editing_index', 'config', save_server_to_db, st.experimental_rerun)
     # Action Button for Configuration
     if st.button("Start Configuration"):
         with st.spinner("Configuring devices..."):
@@ -481,13 +490,15 @@ def buttons():
     
     
 
-def display_servers(servers, editing_index_key, section, delete_function, rerun_function):
+def display_servers(servers, editing_index_key, section, delete_server_from_db, rerun_function):
     for i, server in enumerate(servers):
-        st.write(f"Server {i+1}: {server['address']}")
-        st.write(f"Username: {server['username']}")
+        # st.write(f"Server {i+1}: {server['address']}")
+        # st.write(f"Username: {server['username']}")
         st.write("Commands:")
-        for command in server['commands']:
-            st.text(command)
+       
+        st.text(server['commands'])
+
+
         with st.container():
             col1, col2, col3 = st.columns([1, 1, 1])
             edit_button = col1.button("Edit", key=f"edit_{section}_{i}")
@@ -511,7 +522,7 @@ def display_servers(servers, editing_index_key, section, delete_function, rerun_
                 # delete_server_from_db(st.session_state.editing_index)
                 # rerun_function()
                 del servers[i]
-                delete_function()
+                delete_server_from_db(server)
                 rerun_function()
         st.write("---")
 

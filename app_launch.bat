@@ -42,7 +42,7 @@ if not "%env_path_found%"=="" (
     echo Environment path found: %env_path_found%
     call "%localappdata%\NVIDIA\MiniConda\Scripts\activate.bat" %env_path_found%
     cd C:\Users\RayBe\AppData\Local\NVIDIA\ChatWithRTX\RAG\trt-llm-rag-windows-main
-    start streamlit run app_sshcommander.py
+    streamlit run app_sshcommander.py
     @REM start python verify_install.py
     @REM python app_sshtensortt.py
     
