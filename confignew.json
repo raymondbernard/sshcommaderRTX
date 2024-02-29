@@ -5,7 +5,7 @@
             "username": "",
             "password": "",
             "timestamp": 1709046656.0818853,
-            "config_description": "system message 1",
+            "config_description": "",
             "commands": [
                 "command 1"
             ]
@@ -15,7 +15,7 @@
             "username": "",
             "password": "",
             "timestamp": 1709046657.0818853,
-            "config_description": "system message 2",
+            "config_description": "",
             "commands": [
                 "command 2"
             ]
@@ -25,13 +25,13 @@
             "username": "",
             "password": "",
             "timestamp": 1709046658.0818853,
-            "config_description": "system message 3",
+            "config_description": "",
             "commands": [
                 "command 3"
             ]
         }
     ],
     "hostname": "",
-    "port": 22,
+    "port": 25374,
     "username": "ubuntu"
 }

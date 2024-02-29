@@ -23,7 +23,16 @@ DEFAULT_SYSTEM_MESSAGE  = "Note we are using Nvidia's cumulus Linux distribution
 # Define file paths
 local_app_data = os.getenv('LOCALAPPDATA')
 DATABASE_PATH = os.path.join(local_app_data, "NVIDIA", "ChatWithRTX", "RAG", "trt-llm-rag-windows-main", "sshcommander.db")
+# Define file paths
+COMMAND_LOGS = os.path.join(local_app_data, "NVIDIA", "ChatWithRTX", "RAG", "trt-llm-rag-windows-main", "commands_logs.jsonl")
+CHAT_LOGS = os.path.join(local_app_data, "NVIDIA", "ChatWithRTX", "RAG", "trt-llm-rag-windows-main", "chat_logs.jsonl")
+CONFIG_JSON = os.path.join(local_app_data, "NVIDIA", "ChatWithRTX", "RAG", "trt-llm-rag-windows-main", "config.json")
+NEW_CONFIG_JSON = os.path.join(local_app_data, "NVIDIA", "ChatWithRTX", "RAG", "trt-llm-rag-windows-main", "confignew.json")
 
+
+CONFIG_FILE = CONFIG_JSON
+chat_logs_file_path = CHAT_LOGS
+updated_config_file_path = NEW_CONFIG_JSON
 # Function to connect to the SQLite database
 def connect_database(db_path):
     return sqlite3.connect(db_path)
@@ -48,24 +57,20 @@ def load_servers_from_db(conn):
         })
     st.session_state.servers = servers_list
 
-def save_server_to_db(conn, server):
-    cursor = conn.cursor()
-    # Convert commands list to JSON string for storage
-    commands_json = json.dumps(server['commands'])
-    if 'id' in server:  # Update existing server
-        cursor.execute("""
-            UPDATE servers SET address = ?, username = ?, password = ?, timestamp = ?, config_description = ?, commands = ?
-            WHERE id = ?""", (server['address'], server['username'], server['password'], server['timestamp'], server['config_description'], commands_json, server['id']))
-    else:  # Insert new server
-        cursor.execute("""
-            INSERT INTO servers (address, username, password, timestamp, config_description, commands)
-            VALUES (?, ?, ?, ?, ?, ?)""", (server['address'], server['username'], server['password'], server['timestamp'], server['config_description'], commands_json))
-    conn.commit()
+# def save_server_to_db(server):
+#     cursor = conn.cursor()
+#     # Convert commands list to JSON string for storage
+#     commands_json = json.dumps(server['commands'])
+#     if 'id' in server:  # Update existing server
+#         cursor.execute("""
+#             UPDATE servers SET address = ?, username = ?, password = ?, timestamp = ?, config_description = ?, commands = ?
+#             WHERE id = ?""", (server['address'], server['username'], server['password'], server['timestamp'], server['config_description'], commands_json, server['id']))
+#     else:  # Insert new server
+#         cursor.execute("""
+#             INSERT INTO servers (address, username, password, timestamp, config_description, commands)
+#             VALUES (?, ?, ?, ?, ?, ?)""", (server['address'], server['username'], server['password'], server['timestamp'], server['config_description'], commands_json))
+#     conn.commit()
 
-def delete_server_from_db(conn, server_id):
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM servers WHERE id = ?", (server_id,))
-    conn.commit()
 
 
 def display_ui():
@@ -129,6 +134,8 @@ def load_ai_config():
 def init_session_variables():
     if 'editing_index' not in st.session_state:
         st.session_state.editing_index = None
+    if 'id' not in st.session_state:
+        st.session_state.id = None
     if 'hostname' not in st.session_state:
         st.session_state.hostname = ''
     if 'port' not in st.session_state:
@@ -173,7 +180,9 @@ def ssh_conn_form():
         
     # Configuration Section
     with st.expander("Setup server/device configuration section"):            
-        server_input_form(st.session_state.servers, st.session_state.editing_index, 'server_form', "Configure your devices", save_config)
+        server_input_form(st.session_state.servers, st.session_state.editing_index, 'server_form', "Configure your devices", save_server_to_db)
+
+
 # Define the add_configuration function here
 def add_configuration(server, title, description, commands):
     if 'configurations' not in server:
@@ -274,7 +283,7 @@ def run_commands(ssh_client, server):
 
     shell.close()
 
-# Save configuration 
+# # Save configuration 
 def save_config():
     data = {
         "servers": st.session_state.servers,
@@ -286,24 +295,40 @@ def save_config():
         json.dump(data, f)
 
 
-def save_server_to_db(server):
+def save_server_to_db(servers):
     cursor = conn.cursor()
-    # Convert commands list to JSON string for storage
-    commands_json = json.dumps(server.get('commands', []))
-    # Check if the server already exists (based on a unique attribute like address or timestamp)
-    cursor.execute("SELECT id FROM servers WHERE address = ?", (server['address'],))
-    existing_server_id = cursor.fetchone()
-    if existing_server_id:
-        # Update existing server
-        cursor.execute("""
-            UPDATE servers SET username = ?, password = ?, timestamp = ?, config_description = ?, commands = ?
-            WHERE address = ?""", (server['username'], server['password'], server['timestamp'], server.get('config_description', ''), commands_json, server['address']))
-    else:
-        # Insert new server
-        cursor.execute("""
-            INSERT INTO servers (address, username, password, timestamp, config_description, commands)
-            VALUES (?, ?, ?, ?, ?, ?)""", (server['address'], server['username'], server['password'], server['timestamp'], server.get('config_description', ''), commands_json))
+    
+    for server in servers:
+        commands_json = json.dumps(server.get('commands', []))
+        # Check if 'id' key is present in the server dictionary
+        if 'id' in server:
+            try:
+                # Perform an update using the 'id' as the identifier
+                cursor.execute("""
+                    UPDATE servers SET address = ?, username = ?, password = ?, timestamp = ?, config_description = ?, commands = ?
+                    WHERE id = ?""", 
+                    (server['address'], server['username'], server['password'], server['timestamp'], server.get('config_description', ''), commands_json, server['id']))
+            except Exception as e:
+                print(f"An error occurred while updating: {e}")
+        else:
+            try:
+                # Insert a new record if no 'id' is present
+                cursor.execute("""
+                    INSERT INTO servers (address, username, password, timestamp, config_description, commands)
+                    VALUES (?, ?, ?, ?, ?, ?)""", 
+                    (server['address'], server['username'], server['password'], server['timestamp'], server.get('config_description', ''), commands_json))
+            except Exception as e:
+                print(f"An error occurred while inserting: {e}")
+                
+    conn.commit()  # Commit changes after processing all servers
+    cursor.close()  # Close the cursor when done
+
+
+def delete_server_from_db(server_id):
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM servers WHERE id = ?", (st.session_state.id))
     conn.commit()
+
 # Save tests
 def save_tests():
     data = {
@@ -350,7 +375,8 @@ def server_input_form(servers, editing_index, key, title, save_function):
             servers[editing_index] = server_info
         else:
             servers.append(server_info)
-        save_function()
+        print("line 376 =", servers)
+        save_server_to_db(servers)
         
 def server_input_form(servers, editing_index, key, title, save_function):
     with st.form(key=key):
@@ -373,6 +399,8 @@ def server_input_form(servers, editing_index, key, title, save_function):
         st.session_state.server_address = address
         st.session_state.server_username = server_username
         st.session_state.server_password = server_password
+        st.session_state.commands = commands
+
 
         # Gather server information
         server_info = {
@@ -389,7 +417,7 @@ def server_input_form(servers, editing_index, key, title, save_function):
             servers[editing_index] = server_info
         else:
             servers.append(server_info)
-        save_function()
+        save_server_to_db(servers)
         st.success("Server saved successfully")
 
 
@@ -428,7 +456,7 @@ def buttons():
     
     
 
-def display_servers(servers, editing_index_key, section, save_function, rerun_function):
+def display_servers(servers, editing_index_key, section, delete_function, rerun_function):
     for i, server in enumerate(servers):
         st.write(f"Server {i+1}: {server['address']}")
         st.write(f"Username: {server['username']}")
@@ -450,10 +478,16 @@ def display_servers(servers, editing_index_key, section, save_function, rerun_fu
             
             # Handle delete button press separately
             if delete_button:
+                # print("line 464 session editing_index =",  st.session_state.id)
+                # print("line 467 session editing_index =",  st.session_state)
+                # del st.session_state['']
+                # # delete_server_entry_by_timestamp(server.get('timestamp', None))
 
-                # delete_server_entry_by_timestamp(server.get('timestamp', None))
-                save_function()
+                # delete_server_from_db(st.session_state.editing_index)
                 # rerun_function()
+                del servers[i]
+                delete_function()
+                rerun_function()
         st.write("---")
 
 
