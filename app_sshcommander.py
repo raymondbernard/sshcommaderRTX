@@ -52,8 +52,8 @@ def load_servers_from_db(conn):
             'query': server[2],
             'user': server[3],
             'account': server[4],
-            'timestamp': server[5],  # Assuming index 3 for timestamp, adjust as necessary
-            'comment': server[6],    # Adjust index as necessary
+            # 'timestamp': server[5],  # Assuming index 3 for timestamp, adjust as necessary
+            'timestamp': server[6],    # Adjust index as necessary
             'config_description': server[7],  # Adjust index as necessary
             'commands': server[8]    # Adjust index as necessary
         }
@@ -354,13 +354,6 @@ def save_server_to_db(servers):
 
 
 
-
-def delete_server_from_db(server_id):
-    conn = connect_database(DATABASE_PATH)
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM servers WHERE id = ?", (st.session_state.id))
-    conn.commit()
-
 # Save tests
 def save_tests():
     data = {
@@ -410,7 +403,7 @@ def server_input_form(servers, editing_index, key, title, save_function):
         print("line 376 =", servers)
         save_server_to_db(servers)
         
-def server_input_form(servers, editing_index, key, title, save_function):
+def server_input_form(servers, editing_index, key, title,  save_server_to_db):
     with st.form(key=key):
         st.subheader(title)
         editing_server = servers[editing_index] if editing_index is not None else {}
@@ -457,7 +450,7 @@ def server_input_form(servers, editing_index, key, title, save_function):
 
 def buttons():
     with st.expander("View Saved Configurations and or Edit/Delete"):
-        display_servers(st.session_state.servers, 'editing_index', 'config', save_server_to_db, st.experimental_rerun)
+        display_servers(st.session_state.servers, 'editing_index', 'config', save_server_to_db, st.rerun)
     # Action Button for Configuration
     if st.button("Start Configuration"):
         with st.spinner("Configuring devices..."):
@@ -486,18 +479,29 @@ def buttons():
                 if 'original_ssh_client' in locals() and original_ssh_client is not None:
                     original_ssh_client.close()
 
+def delete_server_from_db(server):
+    st.write("Before deletion:", st.session_state.servers)
 
-    
-    
+    server_id = server['id']  # Correctly capture the server's ID
+    conn = connect_database(DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM servers WHERE id = ?", (server_id,))  # Pass ID as a tuple
+    conn.commit()
+    cursor.close()
+    conn.close()
 
-def display_servers(servers, editing_index_key, section, delete_server_from_db, rerun_function):
+    # Correctly filter out the deleted server from session state
+    st.session_state.servers = [s for s in st.session_state.servers if s['id'] != server_id]
+
+    st.write("After deletion:", st.session_state.servers)
+
+def display_servers(servers, editing_index_key, section, delete_function, rerun_function):
     for i, server in enumerate(servers):
         # st.write(f"Server {i+1}: {server['address']}")
         # st.write(f"Username: {server['username']}")
         st.write("Commands:")
        
         st.text(server['commands'])
-
 
         with st.container():
             col1, col2, col3 = st.columns([1, 1, 1])
@@ -521,11 +525,18 @@ def display_servers(servers, editing_index_key, section, delete_server_from_db, 
 
                 # delete_server_from_db(st.session_state.editing_index)
                 # rerun_function()
-                del servers[i]
+
+                print("line 522 servers == ", server)
+                print("line 523 server id = ", server['id'])
+                print("line 534, = ",servers[i])
+                # del servers[i]
+                # delete_function()
+
                 delete_server_from_db(server)
+                st.session_state.clear()
+
                 rerun_function()
         st.write("---")
-
 
 
 # call nvidia or openai api 
@@ -542,7 +553,7 @@ def test_form():
 
         server_input_form(st.session_state.tests, st.session_state.editing_test_index, 'test_form', "Configure a Test", save_tests)
     with st.expander("View saved Tests and or  Edit / Delete"):
-        display_servers(st.session_state.tests, 'editing_test_index', 'test', save_tests, st.experimental_rerun)
+        display_servers(st.session_state.tests, 'editing_test_index', 'test', save_tests, st.rerun)
         
     # Action Button for Testing
     if st.button("Start Testing"):
