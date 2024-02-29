@@ -15,6 +15,9 @@ import sqlite3
 # Constants
 TEST_FILE = "test.json"
 
+# Assuming DATABASE_PATH is defined
+DATABASE_PATH = 'path_to_your_database.db'
+
 
 # AI  = "call_openai"
 ## command out below if ou use call_openai 
@@ -34,28 +37,48 @@ CONFIG_FILE = CONFIG_JSON
 chat_logs_file_path = CHAT_LOGS
 updated_config_file_path = NEW_CONFIG_JSON
 # Function to connect to the SQLite database
-def connect_database(db_path):
-    return sqlite3.connect(db_path)
-
-conn = connect_database(DATABASE_PATH)
-
 
 def load_servers_from_db(conn):
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM servers")
     servers = cursor.fetchall()
     servers_list = []
+
+    # Refactored loop to populate servers_list with server details
     for server in servers:
-        servers_list.append({
-            "id": server[0],
-            "address": server[1],
-            "username": server[2],
-            "password": server[3],
-            "timestamp": server[4],
-            "config_description": server[5],
-            "commands": json.loads(server[6])
-        })
-    st.session_state.servers = servers_list
+        server_dict = {
+            'id': server[0],
+            'user': server[1],
+            'account': server[2],
+            'timestamp': server[3],  # Assuming index 3 for timestamp, adjust as necessary
+            'comment': server[4],    # Adjust index as necessary
+            'description': server[5],  # Adjust index as necessary
+            'commands': server[6]    # Adjust index as necessary
+        }
+        servers_list.append(server_dict)
+
+    # Update session_state with servers_list
+    st.session_state['servers'] = servers_list
+
+
+# Function to connect to the SQLite database
+def connect_database(db_path):
+    return sqlite3.connect(db_path)
+
+    # Display server commands if servers exist in session_state
+    if 'servers' in st.session_state:
+        for server in st.session_state['servers']:
+            st.text(server['commands'])
+
+            # Example usage
+            conn = connect_database(DATABASE_PATH)
+            load_servers_from_db(conn)
+                # After the loop, assign servers_list to the Streamlit session state
+            st.session_state.servers = servers_list
+
+    # Optional: Print the servers list to the console for debugging purposes
+    print(servers_list)
+
 
 # def save_server_to_db(server):
 #     cursor = conn.cursor()
@@ -296,6 +319,7 @@ def save_config():
 
 
 def save_server_to_db(servers):
+    conn = connect_database(DATABASE_PATH)
     cursor = conn.cursor()
     
     for server in servers:
@@ -325,6 +349,7 @@ def save_server_to_db(servers):
 
 
 def delete_server_from_db(server_id):
+    conn = connect_database(DATABASE_PATH)
     cursor = conn.cursor()
     cursor.execute("DELETE FROM servers WHERE id = ?", (st.session_state.id))
     conn.commit()
@@ -577,6 +602,8 @@ def close_database_connection(conn):
 # Main Application Logic
 
 def main():
+
+    conn = connect_database(DATABASE_PATH)
     init_session_variables()
     display_ui()
     # load_config()
@@ -587,7 +614,7 @@ def main():
     buttons()
     test_form()
     markdown_file()
-    
+    close_database_connection(conn)
     # app_process_data.main()
     
 if __name__ == "__main__":
