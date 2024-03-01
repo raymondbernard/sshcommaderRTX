@@ -342,6 +342,7 @@ def save_config():
     with open(CONFIG_FILE, "w") as f:
         json.dump(data, f)
 
+        
 def save_server_to_db(servers):
     conn = connect_database(DATABASE_PATH)
     cursor = conn.cursor()
@@ -350,35 +351,33 @@ def save_server_to_db(servers):
         if not isinstance(server, dict) or 'commands' not in server:
             print(f"Error: Invalid server data format or missing 'commands' key: {server}")
             continue
-        id += 1
-        print("LOOPS !!!!! == ", id )
-        # Assuming 'commands' is a list and needs to be serialized
-        commands = server.get('commands') 
+
+        # Remove 'bash' from the beginning of the commands string if present
+        commands = server['commands']
+        if commands.startswith('bash'):
+            commands = commands[len('bash'):].strip()
+
         address_value = server.get('address', 'default_value_if_missing')
         username_value = server.get('username', 'default_value_if_missing')
         password_value = server.get('password', 'default_value_if_missing')
-        # config_description = server.get('password', 'default_value_if_missing')
-        newid = server.get('row_num')
-        print("line 360 serverid == ", server.get('id',))
-        print("line 361 newid row num  == ", server.get('row_num',))
-        print("line 362 newid   == ", newid)
-     
-        print("line 367  commands json  id = ", id, commands)
-    
-
+        server_id = server.get('id')  # Assuming there's an ID field
+        id += 1  # Note: This assumes id is manually managed and increments. Make sure it aligns with your DB's id handling.
+        
         try:
             cursor.execute("""
                 UPDATE servers SET address = ?, username = ?, password = ?, commands = ?
                 WHERE id = ?""",
                 (address_value, username_value, password_value, commands, id))
-            print(f"Updated server with id {server['id']}")
+            print(f"Updated server with id {server_id}")
         except Exception as e:
-            continue
-            # print(f"An error occurred while updating: {e}")
-
+            print(f"An error occurred while updating: {e}")
 
     conn.commit()
     cursor.close()
+
+    cursor.close()
+
+
 
 
 # Save tests
@@ -425,7 +424,7 @@ def server_input_form(servers, editing_index, key, title,  save_server_to_db):
             "password": server_password,
             "timestamp": current_timestamp,  # Use the existing or new timestamp
             "config_description": "",
-            "commands": [cmd.strip() for cmd in commands.split('\n') if cmd.strip()]
+            "commands": commands 
         }
 
         # Save or update the server information
@@ -569,12 +568,12 @@ def display_servers(servers, editing_index_key, section, delete_server_from_db, 
         st.write("---")
 
 
-# call nvidia or openai api 
-def call_ai(ai_type, commands):
-    with st.spinner('Waiting for AI response...'):
-        print("Calling Nvidia Local")
+# # call nvidia or openai api 
+# def call_ai(ai_type, commands):
+#     with st.spinner('Waiting for AI response...'):
+#         print("Calling Nvidia Local")
         
-        return call_nvidia(commands)
+#         return call_nvidia(commands)
     
 
 # read the config.json file for markdown conversion       

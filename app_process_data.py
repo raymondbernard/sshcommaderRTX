@@ -23,8 +23,14 @@ def parse_chat_logs(chat_logs_path):
                 parts = response.split('```')
                 command = parts[1].strip() if len(parts) > 1 else ""
                 description = parts[2].strip() if len(parts) > 2 else ""
+                # Remove 'bash' from the start of the command
+                if command.startswith('bash '):  # Check if 'bash' is at the start and followed by a space
+                    command = command[5:].strip()  # Remove 'bash ' (including the space)
+                elif command.startswith('bash'):  # Check if 'bash' is at the start without a following space
+                    command = command[4:].strip()
             results.append({'session_id': session_id, 'query': query, 'command': command, 'config_description': description, 'timestamp': timestamp})
     return results
+
 
 def update_configuration(chat_log_entries, db_path):
     conn = connect_database(db_path)
