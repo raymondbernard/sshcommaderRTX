@@ -8,13 +8,9 @@ from datetime import datetime
 import sqlite3 
 
 
-# Constants
-TEST_FILE = "test.json"
-
 # AI  = "call_openai"
 ## command out below if ou use call_openai 
-DEFAULT_AI = "call_nvidi" 
-DEFAULT_SYSTEM_MESSAGE  = "Note we are using Nvidia's cumulus Linux distribution, just describe the commands you see.   Please keep your responses short and precise."
+# DEFAULT_SYSTEM_MESSAGE  = "Note we are using Nvidia's cumulus Linux distribution, just describe the commands you see.   Please keep your responses short and precise."
 # Define file paths
 local_app_data = os.getenv('LOCALAPPDATA')
 DATABASE_PATH = os.path.join(local_app_data, "NVIDIA", "ChatWithRTX", "RAG", "trt-llm-rag-windows-main", "sshcommander.db")
@@ -24,15 +20,16 @@ CHAT_LOGS = os.path.join(local_app_data, "NVIDIA", "ChatWithRTX", "RAG", "trt-ll
 
 chat_logs_file_path = CHAT_LOGS
 # Function to connect to the SQLite database
-
-
+def refresh_server_list_from_db():
+    conn = connect_database(DATABASE_PATH)
+    st.session_state.servers = load_servers_from_db(conn)
+    conn.close()
 
 def load_servers_from_db(conn):
     cursor = conn.cursor()
-    # Modified SQL query to include ROW_NUMBER
+    # Simplified SQL query without ROW_NUMBER
     cursor.execute("""
         SELECT 
-            ROW_NUMBER() OVER (ORDER BY id) AS row_num,
             id,
             session_id,
             query,
@@ -43,40 +40,36 @@ def load_servers_from_db(conn):
             config_description,
             commands
         FROM servers
+        ORDER BY id
     """)
     servers = cursor.fetchall()
     servers_list = []
-    print("line 60 server_list = ", servers_list)
 
-    # Refactored loop to populate servers_list with server details, including row number
+    # Loop to populate servers_list with server details without row number
     for server in servers:
         server_dict = {
-            'row_num': server[0],  # Added row_num based on the adjusted query
-            'id': server[1],
-            'session_id': server[2],
-            'query': server[3],
-            'address': server[4],
-            'username': server[5],
-            'password': server[6],
-            'timestamp': server[7],
-            'config_description': server[8],
-            'commands': server[9]
+            'id': server[0],
+            'session_id': server[1],
+            'query': server[2],
+            'address': server[3],
+            'username': server[4],
+            'password': server[5],
+            'timestamp': server[6],
+            'config_description': server[7],
+            'commands': server[8]
         }
         servers_list.append(server_dict)
-    print("line 61 server_list", servers_list)
     # Update session_state with servers_list
     st.session_state['servers'] = servers_list
-    # st.write("After init:", st.session_state.servers)
     cursor.close()
     conn.close()
     return st.session_state
+
    
 
 # Function to connect to the SQLite database
 def connect_database(db_path):
     return sqlite3.connect(db_path)
-
-
 
 def display_ui():
     col1, col2 = st.columns([1, 15])
@@ -94,19 +87,6 @@ def display_ui():
         </div>
         """, unsafe_allow_html=True)
 
-# Streamlit sidebar interface for changing AI configuration
-def load_ai_config():
-    try:
-        with open('config_ai.json', 'r') as file:
-            config = json.load(file)
-            config['AI'] = config.get('AI', DEFAULT_AI)
-            config['SYSTEM_MESSAGE'] = config.get('SYSTEM_MESSAGE', DEFAULT_SYSTEM_MESSAGE)
-            
-            return config
-    except Exception as e:
-        print(f"Error loading config: {e}")
-        # Return default configuration if any error occurs
-        return {"AI": DEFAULT_AI, "SYSTEM_MESSAGE": DEFAULT_SYSTEM_MESSAGE}
 
 
 # Initialize session state variables
@@ -156,11 +136,9 @@ def ssh_conn_form():
         st.session_state.server_username = ''
     if 'server_password' not in st.session_state:
         st.session_state.server_password = ''
-        
     # Configuration Section
-    with st.expander("Setup server/device configuration section"):            
+    with st.expander("Edit configs -- Please click on the below servres to edit them here"):            
         server_input_form(st.session_state.servers, st.session_state.editing_index, 'server_form', "Configure your devices", save_server_to_db)
-
 
 # Define the add_configuration function here
 def add_configuration(server, title, description, commands):
@@ -171,11 +149,6 @@ def add_configuration(server, title, description, commands):
         'commands': commands
     })
         
-def load_tests():
-    if os.path.exists(TEST_FILE):
-        with open(TEST_FILE, "r") as f:
-            data = json.load(f)
-            st.session_state.tests = data.get("tests", [])
 
 # Function to handle file upload and save it temporarily
 def save_uploaded_file(uploaded_file):
@@ -254,6 +227,8 @@ def run_commands(ssh_client, server):
     shell.close()
         
 def save_server_to_db(servers):
+    print("line 227 trying to save my servers!")
+    print("line 228 here is my servers I am trying to save == ", servers)
     conn = connect_database(DATABASE_PATH)
     cursor = conn.cursor()
     id = 0
@@ -281,22 +256,12 @@ def save_server_to_db(servers):
             print(f"Updated server with id {server_id}")
         except Exception as e:
             print(f"An error occurred while updating: {e}")
-
     conn.commit()
     cursor.close()
 
     cursor.close()
 
-# Save tests
-def save_tests():
-    data = {
-        "tests": st.session_state.tests,
-    }
-    with open(TEST_FILE, "w") as f:
-        json.dump(data, f)
-
 # Server Information Input
-        
 def server_input_form(servers, editing_index, key, title,  save_server_to_db):
     with st.form(key=key):
         st.subheader(title)
@@ -312,7 +277,7 @@ def server_input_form(servers, editing_index, key, title,  save_server_to_db):
         server_password = st.text_input("Password (optional)", type="password", value=editing_server.get("password", "")).strip()
 
         commands = st.text_area("Commands (one per line)", value="".join(editing_server.get("commands", ""))).strip()
-        save_server_to_db(servers)
+        # save_server_to_db(servers)
         submit_button = st.form_submit_button("Save configuration")
     
     if submit_button:
@@ -339,12 +304,13 @@ def server_input_form(servers, editing_index, key, title,  save_server_to_db):
         else:
             servers.append(server_info)
         save_server_to_db(servers)
+        
         st.success("Server saved successfully")
 
 
 def buttons():
     with st.expander("View Saved Configurations and or Edit/Delete"):
-        display_servers(st.session_state.servers, 'editing_index', 'config', save_server_to_db, st.rerun)
+        display_servers(st.session_state.servers, 'editing_index', 'config', delete_server_from_db, save_server_to_db, st.rerun)
     # Action Button for Configuration
     if st.button("Start Configuration"):
         with st.spinner("Configuring devices..."):
@@ -372,8 +338,6 @@ def buttons():
             finally:
                 if 'original_ssh_client' in locals() and original_ssh_client is not None:
                     original_ssh_client.close()
-
-
 
 def refactordb():
     # Connect to your SQLite database
@@ -416,72 +380,80 @@ def refactordb():
 
 
 def delete_server_from_db(server):
+    print("!!!!!!!***Delete server from db , line 383, server id to be deleted = ", server['id'])
 
-    server_id = server['id']  # Correctly capture the server's ID
     conn = connect_database(DATABASE_PATH)
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM servers WHERE id = ?", (server_id,))  # Pass ID as a tuple
+    cursor.execute("DELETE FROM servers WHERE id = ?", (server['id'],))  # Pass ID as a tuple
     conn.commit()
     cursor.close()
     conn.close()
+
+    # refresh_server_list_from_db()
     refactordb()
 
-    # Filter out the deleted server from session state
-    updated_servers = [s for s in st.session_state.servers if s['id'] != server_id]
+    # # Filter out the deleted server from session state
+    # updated_servers = [s for s in st.session_state.servers if s['id'] != server_id]
 
-    # Optionally, reassign row numbers for display purposes
-    for i, server in enumerate(updated_servers, start=1):
-        server['row_num'] = i  # Assign new row numbers starting from 1
+    # # # Optionally, reassign row numbers for display purposes
+    # # for i, server in enumerate(updated_servers, start=1):
+    # #     server['row_num'] = i  # Assign new row numbers starting from 1
 
-    st.session_state.servers = updated_servers
+    # st.session_state.servers = updated_servers
 
 
-def display_servers(servers, editing_index_key, section, delete_server_from_db, rerun_function):
+def display_servers(servers, editing_index_key, section,  delete_server_from_db, save_server_to_db, rerun_function):
     for i, server in enumerate(servers):
         st.write(f"Server {i+1}: {server['address']}")
         st.write(f"Username: {server['username']}")
         st.write("Commands:")
-       
         st.text(server['commands'])
 
         with st.container():
             col1, col2, col3 = st.columns([1, 1, 1])
             edit_button = col1.button("Edit", key=f"edit_{section}_{i}")
             delete_button = col2.button("Delete", key=f"delete_{section}_{i}")
-            
+            # refresh_server_list_from_db()
             # Handle edit button press
             if edit_button:
                 # Safely retrieve the timestamp, providing a default if not found
                 # Update the session state to indicate which server is being edited
-                st.session_state[editing_index_key] = i
                 
+                st.session_state[editing_index_key] = i
+                save_server_to_db(server)
                 rerun_function()  # Rerun the app to load the editing form
                 st.session_state.clear()
+                refresh_server_list_from_db()
+
 
             # Handle delete button press separately
             if delete_button:
-    
-                print("line 522 servers == ", server)
-                print("line 523 server id = ", server['id'])
-                print("line 534, = ",servers[i])
-                delete_server_from_db(server)
-                st.session_state.clear()
+                print("Delete button line 420 servers == ", server)
+                print("Delete button line 421 server id = ", server['id'])
+                print("Delete button line 422, = ", servers[i])
+                  # Directly call delete_server_from_db with the server to be deleted
+                delete_server_from_db(server)  # Pass the correct server object
 
-                rerun_function()
+                del servers[i]
+                # st.rerun()  # Rerun the app to reflect change
+
+                # Assuming you want to refresh or update the list/display after deletion
+                # servers.remove(server)  # Remove the server from the list if it's stored in memory
+                # st.session_state.servers = servers  # Update the session state if needed
+                # st.session_state.clear()
+                st.rerun()  # Rerun the app to reflect change
         st.write("---")
-
-
 
 
 # process config to markdown 
 def display_servers_as_markdown(servers):
     markdown_text = ""
-    print("590 servers markdown === ", servers)
+    # print("437 servers markdown === ", servers)
     if servers and 'servers' in servers:
         for server in servers['servers']:
             # Adding server details and description
             # markdown_text += f"## Server ID: {server['id']}\n\n"
-            markdown_text += f"**Session ID:** `{server['session_id']}`\n\n"
+            # markdown_text += f"**Session ID:** `{server['session_id']}`\n\n"
             markdown_text += f"**Query:** {server['query']}\n\n"
             markdown_text += f"**Configuration Note:**\n\n> {server['config_description']}\n\n"
             markdown_text += "**Commands:**\n\n```bash\n"
@@ -511,8 +483,9 @@ def markdown_file(servers):
 # Function to close the database connection
 def close_database_connection(conn):
     conn.close()
-# Main Application Logic
 
+
+# Main Application Logic
 def Startup():
     # st.session_state.clear()
     
@@ -525,10 +498,9 @@ def Startup():
         print(f"The database file '{DATABASE_PATH}' exists.")
         
         servers = load_servers_from_db(conn)
-        load_tests()
         ssh_conn_form()
         buttons()
-        markdown_file(servers)
+        # markdown_file(servers)
         close_database_connection(conn)
     else:
         print(f"The database file '{DATABASE_PATH}' does not exist.  ")
