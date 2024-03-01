@@ -72,7 +72,8 @@ def create_tables(conn):
     """)
     conn.commit()
 
-if __name__ == '__main__':
+
+def Process_Data():
     conn = connect_database(DATABASE_PATH)
     create_tables(conn)
     conn.close()
@@ -80,3 +81,9 @@ if __name__ == '__main__':
     chat_log_entries = parse_chat_logs(CHAT_LOGS)
     update_configuration(chat_log_entries, DATABASE_PATH)
     logging.info("Configuration data has been successfully updated in the database.")
+    
+
+
+if __name__ == '__main__':
+    Process_Data()
+

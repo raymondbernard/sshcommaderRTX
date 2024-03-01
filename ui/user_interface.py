@@ -200,8 +200,16 @@ class MainInterface:
 
     def get_css(self):
         return kaizen.css() + open(os.path.join(os.path.dirname(__file__), 'www/app.css')).read()
+    # This function will launch the Streamlit app when called
 
+    # Launch the app_sshcommander
+    def launch_streamlit_app(self):
+        streamlit_script_path = os.path.join(os.environ['LOCALAPPDATA'], "NVIDIA\\ChatWithRTX\\RAG\\trt-llm-rag-windows-main\\app_sshcommander.py")
+        subprocess.Popen(['streamlit', 'run', streamlit_script_path])
+        return "Launching Streamlit app..."
+    
     def render(self):
+   
         with gr.Blocks(
             title="SSH Commander Windows with Chat with  RTX ",
             analytics_enabled=False,
@@ -217,6 +225,13 @@ class MainInterface:
                 self._shutdown_memory_released_markdown,
                 self._shutdown_invalid_session_markdown
             ) = self._render_logo_shut_down()
+
+            launch_button = gr.Button("Launch SSH Session")
+            launch_status = gr.Textbox(visible=False)  # This Textbox could be used to show a status message
+
+            # When the button is clicked, it will call the launch_streamlit_app method
+            launch_button.click(self.launch_streamlit_app, inputs=[], outputs=launch_status)
+
             with gr.Row():
                 self._models_dropdown, self._models_group = self._render_models()
                 (
@@ -256,6 +271,7 @@ class MainInterface:
             show_api=False,
             server_port=port
         )
+  
 
     def _get_free_port(self):
         # Create a socket object

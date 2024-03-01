@@ -4,8 +4,6 @@ import json
 import logging
 import gc
 import torch
-import ast
-import threading
 from pathlib import Path
 from trt_llama_api import TrtLlmAPI
 #from langchain.embeddings.huggingface import HuggingFaceEmbeddings
@@ -17,16 +15,21 @@ from llama_index.llms.llama_utils import messages_to_prompt, completion_to_promp
 from llama_index import set_global_service_context
 from faiss_vector_storage import FaissEmbeddingStorage
 from ui.user_interface import MainInterface
-
+from app_process_data import Process_Data 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
-
 
 app_config_file = 'config\\app_config.json'
 model_config_file = 'config\\config.json'
 preference_config_file = 'config\\preferences.json'
 data_source = 'directory'
 
+# call the app_process_data after chat_logs have been created
+def process_sshcmd():
+    Process_Data()
+    print("Processed Data into SSH Commander DB")
+
+# Where we create the chatl_log
 def log_response(query, response, session_id):
     print(response)
 
@@ -39,8 +42,7 @@ def log_response(query, response, session_id):
     with open("chat_logs.jsonl", "a") as log_file:
         json.dump(log_entry, log_file)
         log_file.write("\n")  # For readability in the log file
-
-
+    process_sshcmd()
 
 def log_completion_response(completion_response):
     print(f"Received input: {completion_response}, Type: {type(completion_response)}")  # Debug print
@@ -340,15 +342,12 @@ def identify_url_type(url: str) -> str:
     # If neither, return 'unknown'
     return 'unknown'
 
-
-
 def extract_video_id(url):
     # Extract the video ID from the URL
     try:
         return url.split("v=")[1].split("&")[0]
     except IndexError:
         return None
-
 
 def dict_to_xml(tag, d):
     elem = ET.Element(tag)
@@ -528,7 +527,7 @@ def stream_chatbot(query, chat_history, session_id):
             yield partial_response
             # time.sleep(0.05)
         log_response(query, full_response, session_id)  # Log full response after the loop
-
+        
         # time.sleep(0.2)
 
         if highest_score_file:
@@ -669,7 +668,6 @@ def on_dataset_source_change_handler(source, path, session_id):
 
 interface.on_dataset_source_updated(on_dataset_source_change_handler)
 
-
 def handle_regenerate_index(source, path, session_id):
     if data_source == "youtube":
         path = os.path.join(os.getcwd(), 'youtube_dataset')
@@ -677,10 +675,10 @@ def handle_regenerate_index(source, path, session_id):
     print("on regenerate index", source, path, session_id)
 
 
-
 interface.on_regenerate_index(handle_regenerate_index)
 # render the interface
 interface.render()
+
 
 
 # def user_comp():

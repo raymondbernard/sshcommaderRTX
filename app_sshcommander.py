@@ -1,23 +1,15 @@
-import requests
 import streamlit as st
 import paramiko
 import os
 import json
 import time
 import select 
-import os
-import app_process_data
-import os
 from datetime import datetime
 import sqlite3 
 
 
 # Constants
 TEST_FILE = "test.json"
-
-# Assuming DATABASE_PATH is defined
-DATABASE_PATH = 'path_to_your_database.db'
-
 
 # AI  = "call_openai"
 ## command out below if ou use call_openai 
@@ -27,16 +19,13 @@ DEFAULT_SYSTEM_MESSAGE  = "Note we are using Nvidia's cumulus Linux distribution
 local_app_data = os.getenv('LOCALAPPDATA')
 DATABASE_PATH = os.path.join(local_app_data, "NVIDIA", "ChatWithRTX", "RAG", "trt-llm-rag-windows-main", "sshcommander.db")
 # Define file paths
-COMMAND_LOGS = os.path.join(local_app_data, "NVIDIA", "ChatWithRTX", "RAG", "trt-llm-rag-windows-main", "commands_logs.jsonl")
 CHAT_LOGS = os.path.join(local_app_data, "NVIDIA", "ChatWithRTX", "RAG", "trt-llm-rag-windows-main", "chat_logs.jsonl")
-CONFIG_JSON = os.path.join(local_app_data, "NVIDIA", "ChatWithRTX", "RAG", "trt-llm-rag-windows-main", "config.json")
-NEW_CONFIG_JSON = os.path.join(local_app_data, "NVIDIA", "ChatWithRTX", "RAG", "trt-llm-rag-windows-main", "confignew.json")
 
 
-CONFIG_FILE = CONFIG_JSON
 chat_logs_file_path = CHAT_LOGS
-updated_config_file_path = NEW_CONFIG_JSON
 # Function to connect to the SQLite database
+
+
 
 def load_servers_from_db(conn):
     cursor = conn.cursor()
@@ -77,47 +66,15 @@ def load_servers_from_db(conn):
     print("line 61 server_list", servers_list)
     # Update session_state with servers_list
     st.session_state['servers'] = servers_list
-    st.write("After init:", st.session_state.servers)
+    # st.write("After init:", st.session_state.servers)
     cursor.close()
     conn.close()
     return st.session_state
-
-    
-    
-
+   
 
 # Function to connect to the SQLite database
 def connect_database(db_path):
     return sqlite3.connect(db_path)
-
-# # Display server commands if servers exist in session_state
-# if 'servers' in st.session_state:
-#     for server in st.session_state['servers']:
-#         st.text(server['commands'])
-
-#         # Example usage
-#         conn = connect_database(DATABASE_PATH)
-#         load_servers_from_db(conn)
-#             # After the loop, assign servers_list to the Streamlit session state
-#         st.session_state.servers = servers_list
-
-# # Optional: Print the servers list to the console for debugging purposes
-# print(servers_list)
-
-
-# def save_server_to_db(conn,server):
-#     cursor = conn.cursor()
-#     # Convert commands list to JSON string for storage
-#     commands_json = json.dumps(server['commands'])
-#     if 'id' in server:  # Update existing server
-#         cursor.execute("""
-#             UPDATE servers SET address = ?, username = ?, password = ?, timestamp = ?, config_description = ?, commands = ?
-#             WHERE id = ?""", (server['address'], server['username'], server['password'], server['timestamp'], server['config_description'], commands_json, server['id']))
-#     else:  # Insert new server
-#         cursor.execute("""
-#             INSERT INTO servers (address, username, password, timestamp, config_description, commands)
-#             VALUES (?, ?, ?, ?, ?, ?)""", (server['address'], server['username'], server['password'], server['timestamp'], server['config_description'], commands_json))
-#     conn.commit()
 
 
 
@@ -150,32 +107,6 @@ def load_ai_config():
         print(f"Error loading config: {e}")
         # Return default configuration if any error occurs
         return {"AI": DEFAULT_AI, "SYSTEM_MESSAGE": DEFAULT_SYSTEM_MESSAGE}
-
-
-# def save_ai_config(config):
-#     with open(CONFIG_AI_FILE, 'w') as file:
-#         json.dump(config, file)
-
-# # def config_ai_interface():
-#     st.sidebar.title("AI Configuration")
-#     config = load_json(CONFIG_AI_FILE, default={"AI": DEFAULT_AI, "SYSTEM_MESSAGE": DEFAULT_SYSTEM_MESSAGE})
-#     system_message = st.sidebar.text_area("System Message", value=config.get('SYSTEM_MESSAGE', DEFAULT_SYSTEM_MESSAGE))
-#     if st.sidebar.button("Save Configuration"):
-#         config['SYSTEM_MESSAGE'] = system_message
-#         save_json(CONFIG_AI_FILE, config)
-#         st.sidebar.success("AI Configuration saved!")
-
-# def config_ai_interface():
-#     st.sidebar.title("Save Configs")
-#     config = load_ai_config()
-#     system_message = st.sidebar.text_area("System Message", value=config.get('SYSTEM_MESSAGE', DEFAULT_SYSTEM_MESSAGE))
-#     if st.sidebar.button("Save Configuration"):
-#         new_config = {
-#             "AI": "na",
-#             "SYSTEM_MESSAGE": system_message
-#         }
-#         save_ai_config(new_config)
-#         st.sidebar.success("AI Configuration saved!")
 
 
 # Initialize session state variables
@@ -239,15 +170,6 @@ def add_configuration(server, title, description, commands):
         'description': description,
         'commands': commands
     })
-
-# Load existing configuration and tests
-# def load_config():
- 
-        
-#         st.session_state.servers = data.get("servers", [])
-#         st.session_state.hostname = data.get("hostname", "")
-#         st.session_state.port = data.get("port", 22)
-#         st.session_state.username = data.get("username", "")
         
 def load_tests():
     if os.path.exists(TEST_FILE):
@@ -330,18 +252,6 @@ def run_commands(ssh_client, server):
     st.text(output)
 
     shell.close()
-
-# # Save configuration 
-def save_config():
-    data = {
-        "servers": st.session_state.servers,
-        "hostname": st.session_state.hostname,
-        "port": st.session_state.port,
-        "username": st.session_state.username,
-    }
-    with open(CONFIG_FILE, "w") as f:
-        json.dump(data, f)
-
         
 def save_server_to_db(servers):
     conn = connect_database(DATABASE_PATH)
@@ -377,9 +287,6 @@ def save_server_to_db(servers):
 
     cursor.close()
 
-
-
-
 # Save tests
 def save_tests():
     data = {
@@ -387,7 +294,6 @@ def save_tests():
     }
     with open(TEST_FILE, "w") as f:
         json.dump(data, f)
-
 
 # Server Information Input
         
@@ -470,12 +376,9 @@ def buttons():
 
 
 def refactordb():
-
     # Connect to your SQLite database
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
-
-
     # Step 1: Create a temporary table to store the current data
     cursor.execute("""CREATE TEMPORARY TABLE tmp_servers AS SELECT * FROM servers;""")
 
@@ -568,18 +471,7 @@ def display_servers(servers, editing_index_key, section, delete_server_from_db, 
         st.write("---")
 
 
-# # call nvidia or openai api 
-# def call_ai(ai_type, commands):
-#     with st.spinner('Waiting for AI response...'):
-#         print("Calling Nvidia Local")
-        
-#         return call_nvidia(commands)
-    
 
-# read the config.json file for markdown conversion       
-def read_json(file_path):
-    with open(file_path, 'r') as file:
-        return json.load(file)
 
 # process config to markdown 
 def display_servers_as_markdown(servers):
@@ -621,20 +513,28 @@ def close_database_connection(conn):
     conn.close()
 # Main Application Logic
 
-def main():
+def Startup():
     # st.session_state.clear()
-    conn = connect_database(DATABASE_PATH)
-    init_session_variables()
+    
     display_ui()
-    # load_config()
-    # config_ai_interface()
-    servers = load_servers_from_db(conn)
-    load_tests()
-    ssh_conn_form()
-    buttons()
-    markdown_file(servers)
-    close_database_connection(conn)
-    # app_process_data.main()
+
+    # Check if the database file exists
+    if os.path.exists(DATABASE_PATH):
+        conn = connect_database(DATABASE_PATH)
+        init_session_variables()
+        print(f"The database file '{DATABASE_PATH}' exists.")
+        
+        servers = load_servers_from_db(conn)
+        load_tests()
+        ssh_conn_form()
+        buttons()
+        markdown_file(servers)
+        close_database_connection(conn)
+    else:
+        print(f"The database file '{DATABASE_PATH}' does not exist.  ")
+        st.write("Please Wait until Chat with SSH Commander RTX Opens to continue")
+
+
     
 if __name__ == "__main__":
-    main()
+    Startup()
