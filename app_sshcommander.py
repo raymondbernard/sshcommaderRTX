@@ -353,7 +353,7 @@ def save_server_to_db(servers):
         id += 1
         print("LOOPS !!!!! == ", id )
         # Assuming 'commands' is a list and needs to be serialized
-        commands_json = json.dumps(server['commands']) if isinstance(server['commands'], list) else server['commands']
+        commands = server.get('commands') 
         address_value = server.get('address', 'default_value_if_missing')
         username_value = server.get('username', 'default_value_if_missing')
         password_value = server.get('password', 'default_value_if_missing')
@@ -362,18 +362,15 @@ def save_server_to_db(servers):
         print("line 360 serverid == ", server.get('id',))
         print("line 361 newid row num  == ", server.get('row_num',))
         print("line 362 newid   == ", newid)
-        # if not newid:
-        #     newid = 1 
-        # print("line 365 server id" , server['id'])
-        print("line 366 newid == ", newid)
-        print("line 367  commands json  id = ", id, commands_json)
+     
+        print("line 367  commands json  id = ", id, commands)
     
 
         try:
             cursor.execute("""
                 UPDATE servers SET address = ?, username = ?, password = ?, commands = ?
                 WHERE id = ?""",
-                (address_value, username_value, password_value, commands_json, id))
+                (address_value, username_value, password_value, commands, id))
             print(f"Updated server with id {server['id']}")
         except Exception as e:
             continue
@@ -609,19 +606,16 @@ def display_servers_as_markdown(servers):
 # create a markdown of the contents of the config.json file
 def markdown_file(servers):
     st.sidebar.button('Read Config', on_click=lambda: st.session_state.update({'read_config': True}))
-    if 'read_config' in st.session_state and st.session_state['read_config']:
-        config_file = 'config.json'
-        markdown_text = display_servers_as_markdown(servers)
-        st.markdown(markdown_text)
-        # Generate a download button for the markdown content
-        st.sidebar.download_button(
-            label="Download Markdown",
-            data=markdown_text,
-            file_name="server_config.md",
-            mime="text/markdown"
-        )
-    else:
-        st.error(f"Please configure your devices first. Before you read the config, since the File {config_file} was not yet created.")
+
+    markdown_text = display_servers_as_markdown(servers)
+    st.markdown(markdown_text)
+    # Generate a download button for the markdown content
+    st.sidebar.download_button(
+        label="Download Markdown",
+        data=markdown_text,
+        file_name="server_config.md",
+        mime="text/markdown"
+    )
 
 # Function to close the database connection
 def close_database_connection(conn):
