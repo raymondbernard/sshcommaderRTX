@@ -80,6 +80,7 @@ def load_servers_from_db(conn):
     st.write("After init:", st.session_state.servers)
     cursor.close()
     conn.close()
+    return st.session_state
 
     
     
@@ -591,7 +592,7 @@ def display_servers_as_markdown(servers):
     if servers and 'servers' in servers:
         for server in servers['servers']:
             # Adding server details and description
-            markdown_text += f"## Server ID: {server['id']}\n\n"
+            # markdown_text += f"## Server ID: {server['id']}\n\n"
             markdown_text += f"**Session ID:** `{server['session_id']}`\n\n"
             markdown_text += f"**Query:** {server['query']}\n\n"
             markdown_text += f"**Configuration Note:**\n\n> {server['config_description']}\n\n"
@@ -606,24 +607,21 @@ def display_servers_as_markdown(servers):
 
     return markdown_text
 # create a markdown of the contents of the config.json file
-def markdown_file():
+def markdown_file(servers):
     st.sidebar.button('Read Config', on_click=lambda: st.session_state.update({'read_config': True}))
     if 'read_config' in st.session_state and st.session_state['read_config']:
         config_file = 'config.json'
-        if os.path.exists(config_file):
-            config_data = read_json(config_file)
-            markdown_text = display_servers_as_markdown(config_data)
-            st.markdown(markdown_text)
-
-            # Generate a download button for the markdown content
-            st.sidebar.download_button(
-                label="Download Markdown",
-                data=markdown_text,
-                file_name="server_config.md",
-                mime="text/markdown"
-            )
-        else:
-            st.error(f"Please configure your devices first. Before you read the config, since the File {config_file} was not yet created.")
+        markdown_text = display_servers_as_markdown(servers)
+        st.markdown(markdown_text)
+        # Generate a download button for the markdown content
+        st.sidebar.download_button(
+            label="Download Markdown",
+            data=markdown_text,
+            file_name="server_config.md",
+            mime="text/markdown"
+        )
+    else:
+        st.error(f"Please configure your devices first. Before you read the config, since the File {config_file} was not yet created.")
 
 # Function to close the database connection
 def close_database_connection(conn):
@@ -631,17 +629,17 @@ def close_database_connection(conn):
 # Main Application Logic
 
 def main():
-
+    # st.session_state.clear()
     conn = connect_database(DATABASE_PATH)
     init_session_variables()
     display_ui()
     # load_config()
     # config_ai_interface()
-    load_servers_from_db(conn)
+    servers = load_servers_from_db(conn)
     load_tests()
     ssh_conn_form()
     buttons()
-    markdown_file()
+    markdown_file(servers)
     close_database_connection(conn)
     # app_process_data.main()
     
