@@ -228,19 +228,17 @@ def run_commands(ssh_client, server):
     shell = ssh_client.invoke_shell()
     shell.setblocking(0)
     shell.send(f"{ssh_cmd}\n")
-
-    for command in commands:
-        shell.send(f"{command}\n")
-        time.sleep(2)
-        output = ""
-        while not output.strip().endswith("$"):  # Adjust the ending prompt as per your server's command prompt
-            ready, _, _ = select.select([shell], [], [], 0.5)
-            if ready:
-                output += shell.recv(10000).decode()  # Adjust buffer size as needed
-            else:
-                # Handle timeout or no data scenario
-                break
-        st.text(output)
+    shell.send(f"{commands}\n")
+    time.sleep(2)
+    output = ""
+    while not output.strip().endswith("$"):  # Adjust the ending prompt as per your server's command prompt
+        ready, _, _ = select.select([shell], [], [], 0.5)
+        if ready:
+            output += shell.recv(10000).decode()  # Adjust buffer size as needed
+        else:
+            # Handle timeout or no data scenario
+            break
+    st.text(output)
 
     shell.send("exit\n")
     output = ""
