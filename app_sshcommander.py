@@ -115,6 +115,11 @@ def init_session_variables():
         st.session_state.tests = []
     if 'editing_test_index' not in st.session_state:
         st.session_state.editing_test_index = None
+    if 'show_configuration_buttons' not in st.session_state:
+        st.session_state.show_configuration_buttons = True 
+    if 'show_edit_configs' not in st.session_state:
+        st.session_state.show_edit_configs = False
+
 
 
 def ssh_conn_form():
@@ -137,8 +142,10 @@ def ssh_conn_form():
     if 'server_password' not in st.session_state:
         st.session_state.server_password = ''
     # Configuration Section
-    with st.expander("Edit configs -- Please click on the below servres to edit them here"):            
-        server_input_form(st.session_state.servers, st.session_state.editing_index, 'server_form', "Configure your devices", save_server_to_db)
+        
+    if st.session_state.show_edit_configs:  # Check if the expander should be shown
+        with st.expander("Edit configs -- Please click on the below servers to edit them here"):            
+            server_input_form(st.session_state.servers, st.session_state.editing_index, 'server_form', "Configure your devices", save_server_to_db)
 
 # Define the add_configuration function here
 def add_configuration(server, title, description, commands):
@@ -279,6 +286,7 @@ def server_input_form(servers, editing_index, key, title,  save_server_to_db):
         commands = st.text_area("Commands (one per line)", value="".join(editing_server.get("commands", ""))).strip()
         # save_server_to_db(servers)
         submit_button = st.form_submit_button("Save configuration")
+        
     
     if submit_button:
         # Update session state with the new values
@@ -304,13 +312,15 @@ def server_input_form(servers, editing_index, key, title,  save_server_to_db):
         else:
             servers.append(server_info)
         save_server_to_db(servers)
-        
+        st.session_state.show_edit_configs = False
         st.success("Server saved successfully")
+        st.rerun()
 
 
 def buttons():
-    with st.expander("View Saved Configurations and or Edit/Delete"):
-        display_servers(st.session_state.servers, 'editing_index', 'config', delete_server_from_db, save_server_to_db, st.rerun)
+    if st.session_state.show_configuration_buttons:
+        with st.expander("View Saved Configurations and or Edit/Delete"):
+            display_servers(st.session_state.servers, 'editing_index', 'config', delete_server_from_db, save_server_to_db, st.rerun)
     # Action Button for Configuration
     if st.button("Start Configuration"):
         with st.spinner("Configuring devices..."):
@@ -420,6 +430,8 @@ def display_servers(servers, editing_index_key, section,  delete_server_from_db,
                 # Update the session state to indicate which server is being edited
                 
                 st.session_state[editing_index_key] = i
+                st.session_state.show_edit_configs = True  # Trigger the expander to show
+
                 save_server_to_db(server)
                 rerun_function()  # Rerun the app to load the editing form
                 st.session_state.clear()
