@@ -402,7 +402,7 @@ class MainInterface:
                 min_width=40
             )
             gr.HTML("""
-                <h1 style="font-size:32px; line-height:40px; margin:0; padding:0">SSH Commander Nvidia RTX</h1>
+                <h1 style="font-size:32px; line-height:40px; margin:0; padding:0">SSH Commander with NVIDIA RTX</h1>
             """)
             shutdown_button = gr.Button(
                 "",
