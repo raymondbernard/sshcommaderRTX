@@ -402,14 +402,6 @@ def delete_server_from_db(server):
     # refresh_server_list_from_db()
     refactordb()
 
-    # # Filter out the deleted server from session state
-    # updated_servers = [s for s in st.session_state.servers if s['id'] != server_id]
-
-    # # # Optionally, reassign row numbers for display purposes
-    # # for i, server in enumerate(updated_servers, start=1):
-    # #     server['row_num'] = i  # Assign new row numbers starting from 1
-
-    # st.session_state.servers = updated_servers
 
 
 def display_servers(servers, editing_index_key, section,  delete_server_from_db, save_server_to_db, rerun_function):
@@ -512,7 +504,7 @@ def Startup():
         servers = load_servers_from_db(conn)
         ssh_conn_form()
         buttons()
-        # markdown_file(servers)
+        markdown_file(servers)
         close_database_connection(conn)
     else:
         print(f"The database file '{DATABASE_PATH}' does not exist.  ")
