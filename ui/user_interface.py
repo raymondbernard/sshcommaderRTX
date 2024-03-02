@@ -595,7 +595,7 @@ class MainInterface:
             )
             gr.HTML("")
         chat_disclaimer_markdown = gr.Markdown(
-            "SSH Commander with RTX response quality depends on the AI model's accuracy and the input dataset. Please verify important information.",
+            "SSH Commander with NVIDIA RTX response quality depends on the AI model's accuracy and the input dataset. Please verify important information.",
             elem_classes="description-secondary-markdown chat-disclaimer-message margin-"
         )
         return (chatbot_window, query_input, submit_button, retry_button, undo_button, reset_button, query_group, chat_disclaimer_markdown)
