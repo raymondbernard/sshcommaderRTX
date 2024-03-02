@@ -403,7 +403,6 @@ def delete_server_from_db(server):
     refactordb()
 
 
-
 def display_servers(servers, editing_index_key, section,  delete_server_from_db, save_server_to_db, rerun_function):
     for i, server in enumerate(servers):
         st.write(f"Server {i+1}: {server['address']}")
@@ -456,8 +455,8 @@ def display_servers_as_markdown(servers):
     if servers and 'servers' in servers:
         for server in servers['servers']:
             # Adding server details and description
-            # markdown_text += f"## Server ID: {server['id']}\n\n"
-            # markdown_text += f"**Session ID:** `{server['session_id']}`\n\n"
+            markdown_text += f"**Server ID:** {server['id']}\n\n"
+            markdown_text += f"**Session ID:** `{server['session_id']}`\n\n"
             markdown_text += f"**Query:** {server['query']}\n\n"
             markdown_text += f"**Configuration Note:**\n\n> {server['config_description']}\n\n"
             markdown_text += "**Commands:**\n\n```bash\n"
