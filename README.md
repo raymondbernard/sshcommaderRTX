@@ -27,7 +27,6 @@ SSH Commander integrates an AI assistant to generate commands and configuration 
 using mistral 7b.  
 
 
-
 # Documentation
 
 SSH Commander allows you to download your configuration configuration in markdown.

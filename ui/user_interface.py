@@ -267,7 +267,7 @@ class MainInterface:
         port = self._get_free_port()
         self._open_app(port)
         interface.launch(
-            favicon_path=os.path.join(os.path.dirname(__file__), 'assets/nvidia_logo.png'),
+            favicon_path=os.path.join(os.path.dirname(__file__), 'assets/sshcommander.png'),
             show_api=False,
             server_port=port
         )
@@ -392,7 +392,7 @@ class MainInterface:
 
     def _render_logo_shut_down(self):
         with gr.Row():
-            gr.Image(os.path.join(os.path.dirname(__file__), "assets/nvidia_logo.png"),
+            gr.Image(os.path.join(os.path.dirname(__file__), "assets/sshcommander.png"),
                 interactive=False,
                 show_label=False,
                 show_download_button=False,
@@ -595,7 +595,7 @@ class MainInterface:
             )
             gr.HTML("")
         chat_disclaimer_markdown = gr.Markdown(
-            "Chat with RTX response quality depends on the AI model's accuracy and the input dataset. Please verify important information.",
+            "SSH Commander with RTX response quality depends on the AI model's accuracy and the input dataset. Please verify important information.",
             elem_classes="description-secondary-markdown chat-disclaimer-message margin-"
         )
         return (chatbot_window, query_input, submit_button, retry_button, undo_button, reset_button, query_group, chat_disclaimer_markdown)

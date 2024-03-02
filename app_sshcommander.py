@@ -96,7 +96,7 @@ def connect_database(db_path):
 def display_ui():
     col1, col2 = st.columns([1, 15])
     with col1:
-        st.image(os.path.join("ui", "assets", "nvidia_logo.png"), width=42)
+        st.image(os.path.join("ui", "assets", "sshcommander.png"), width=42)
     with col2:
         st.markdown("""
         <style>
